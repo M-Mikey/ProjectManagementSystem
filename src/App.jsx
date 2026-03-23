@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -128,6 +129,7 @@ export default function App() {
         closeButton={false}
         theme="colored"
       />
+      <SpeedInsights />
     </BrowserRouter>
   );
 }
