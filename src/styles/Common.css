@@ -1,0 +1,149 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: #eef2f8;
+  /* #f4f6fb; */
+  font-family: "Segoe UI", sans-serif;
+  /* overflow-x: hidden; */
+}
+
+.header-title { font-weight: 700; }
+
+.btn-primary-custom {
+  background-color: #0b2c5d;
+  color: #fff;
+  border: none;
+  width: 200px;
+}
+
+.btn-primary-custom:hover {
+  background-color: #081f40;
+  color: #fff;
+}
+
+.card { border-radius: 8px; }
+
+.btn-delete {
+  background-color: #dc3545;
+  border: none;
+  width: 200px;
+}
+
+.btn-delete:hover { background-color: #f70606; }
+
+.container {
+  background: #d0daee;
+  height: 620px;
+  margin: 5px;
+  padding: 2px;
+  width: auto;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+
+label {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+input {
+  font-size: 10px;
+}
+
+para {
+  background: #fff !important;
+  font-size: small;
+  color: #000;
+}
+
+.text-muted {
+  background: #d0daee !important;
+}
+
+h6 {
+  margin-left: 20px;
+  font-size: 14px;
+  color: red;
+}
+
+h1 {
+  margin-left: 50px;
+  margin-right: 50px;
+  padding-bottom: 10px;
+  font-size: 40px;
+  font-weight: 500;
+}
+
+ul {
+  margin-top: 30px;
+  padding-top: 10px;
+  margin-left: -60px;
+}
+
+
+Sidebar .sidebar {
+  width: 200px;
+  background: #0b2a5b;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  transition: transform 0.3s ease;
+  z-index: 1040;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+}
+
+/* Sidebar links */
+.sidebar .nav-link {
+  color: #cfd8ff;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+}
+
+.sidebar .nav-link:hover { background: rgba(255, 255, 255, 0.1); }
+
+.sidebar i {
+  font-size: 1.3rem;
+  min-width: 30px;
+}
+
+.sidebar span { margin-left: 10px; }
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1030;
+}
+
+
+
+/* .pending { background: #dc3545; }
+.acknowledge { background: #ffc107; color:#000; }
+.progress { background: #198754; }
+.approval { background: #0d6efd; } */

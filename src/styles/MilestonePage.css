@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════
+   PAGE
+═══════════════════════════════════════ */
+.page-container {
+    background: #dce6f5;
+    padding: 24px 28px 48px;
+    width: 100%;
+    height: "100%",
+}
+
+.page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.page-header h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0f2044;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: #555e78;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ═══════════════════════════════════════
+   CREATE MILESTONE BUTTON
+═══════════════════════════════════════ */
+.ms-btn-wrap {
+    margin-bottom: 14px;
+}
+
+.ms-create-btn {
+    background: #1a3260;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 9px 20px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.ms-create-btn:hover {
+    background: #0f2044;
+}
+
+/* ═══════════════════════════════════════
+   MILESTONE CARD
+═══════════════════════════════════════ */
+.ms-card {
+    background: #ffffff;
+    border: 1px solid #b8c8e0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 6px rgba(15, 32, 68, 0.07);
+}
+
+.ms-card-body {
+    display: flex;
+    gap: 40px;
+    padding: 20px 24px 16px;
+}
+
+/* ═══════════════════════════════════════
+   LEFT / RIGHT COLUMNS
+═══════════════════════════════════════ */
+.ms-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ms-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ═══════════════════════════════════════
+   FIELD ROWS
+═══════════════════════════════════════ */
+.ms-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ms-desc-row {
+    align-items: flex-start;
+}
+
+.ms-field-label {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #0f2044;
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.ms-desc-row .ms-field-label {
+    padding-top: 6px;
+}
+
+.ms-right .ms-field-label {
+    min-width: 110px;
+}
+
+.ms-field-input-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ═══════════════════════════════════════
+   INPUTS
+═══════════════════════════════════════ */
+.ms-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #b0bcd4;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ms-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.ms-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #b0bcd4;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #1a1a2e;
+    background: #fff;
+    min-height: 120px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ms-textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.ms-readonly {
+    background: #f5f8ff;
+    cursor: default;
+}
+
+/* ═══════════════════════════════════════
+   FOOTER LEFT — Delete / Cancel (small red, bottom-left)
+═══════════════════════════════════════ */
+.ms-footer-left {
+    margin-top: 4px;
+}
+
+.ms-delete-btn {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.18s;
+}
+
+.ms-delete-btn:hover {
+    background: #b91c1c;
+}
+
+.ms-delete-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* ═══════════════════════════════════════
+   FOOTER RIGHT — Add / Update (navy, bottom-right)
+═══════════════════════════════════════ */
+.ms-footer-right {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ms-add-btn {
+    background: #1a3260;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 7px 24px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.ms-add-btn:hover {
+    background: #0f2044;
+}
+
+/* ═══════════════════════════════════════
+   BOTTOM — Back | Save (full width split)
+═══════════════════════════════════════ */
+.ms-bottom-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.ms-back-btn {
+    flex: 1;
+    background: #1a3260;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.ms-back-btn:hover {
+    background: #0f2044;
+}
+
+.ms-save-btn {
+    flex: 1;
+    background: #1a3260;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.ms-save-btn:hover {
+    background: #0f2044;
+}
+
+/* ═══════════════════════════════════════
+   ERRORS & UTILITY
+═══════════════════════════════════════ */
+.error-text {
+    color: #dc3545;
+    font-size: 0.78rem;
+    margin-top: 3px;
+    display: block;
+}
+
+.col-delete {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    text-align: center;
+}
+
+.note-box.disabled {
+    opacity: 0.6;
+    background-color: #f1f1f1;
+    color: #6c757d;
+    pointer-events: none;
+}

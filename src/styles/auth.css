@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  /*background: linear-gradient(90deg, #bcd0f1 50%, #eef2f7 50%);*/
+ /* background: linear-gradient(90deg, #bcd0f1 100%, #eef2f7 0%);*/
+  background: linear-gradient(90deg, #eef3fb 100%, #eef2f7 0%);   
+}
+
+.auth-container {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.left-panel {
+  flex: 1;
+  padding: 60px;
+}
+
+.auth-card {
+  background: white;
+  padding: 30px;
+  width: 350px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.15);
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.auth-card button {
+  width: 100%;
+  padding: 10px;
+  background: #0a2a66;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+.link {
+  color: blue;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.col-md-6 {
+  width: 100% !important; /* ❌ breaks grid */
+}
+

@@ -1,0 +1,22 @@
+
+/* Summary Cards */
+.summary-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.summary-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Table */
+.table thead {
+  background-color: #0b2a5b;
+  color: #fff;
+}
+
+.status-pending {
+  color: #dc3545;
+  font-weight: 600;
+}

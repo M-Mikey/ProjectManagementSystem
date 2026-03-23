@@ -1,0 +1,233 @@
+/* ── APP SHELL ── */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* ── MAIN LAYOUT (sidebar + content) ── */
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── SCROLLABLE CONTENT AREA ── */
+.content {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  background: #f0f2f7;
+   
+}
+
+
+/* ── PROJECTS PANEL (rounded card wrapping everything) ── */
+.projects-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  /* REMOVE height: 100% */
+}
+
+/* ── HEADING ── */
+.project-heading {
+  font-size: 30px;
+  font-weight: 700;
+  color: #0d1b3e;
+  margin: 0 0 36px 0;
+  letter-spacing: 0.2px;
+}
+
+/* ── PROJECTS GRID ── */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-content: start;
+  /* REMOVE flex: 1 */
+}
+
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 20px;
+  flex-wrap: nowrap;
+  /* REMOVE margin-top: auto */
+}
+
+/* ── LINK WRAPPER ── */
+.project-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  animation: cardFadeIn 0.35s ease both;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── PROJECT CARD ── */
+.project-card {
+  background: #ffffff;
+  border: 1.5px solid #b0bbcf;
+  border-radius: 16px;
+  padding: 22px 26px;
+  min-height: 120px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 32, 96, 0.07);
+}
+
+.project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 32, 96, 0.14);
+  border-color: #7a92bb;
+}
+
+/* Card title */
+.project-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d1b3e;
+  line-height: 1.3;
+}
+
+/* Card description */
+.project-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #445577;
+  line-height: 1.55;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 80px;
+  gap: 12px;
+  color: #6677aa;
+  opacity: 0.7;
+}
+
+.empty-state i {
+  font-size: 48px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ── RESPONSIVE: single column on small screens ── */
+@media (max-width: 900px) {
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+ 
+}
+
+
+
+.projects-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Grid takes all available space, pushing pagination down */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-content: start;   /* cards don't stretch vertically */
+  flex: 1;                /* pushes pagination to bottom */
+}
+
+/* Pagination pinned bottom-right */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 20px;
+  margin-top: auto;       /* sticks to bottom */
+  flex-wrap: nowrap;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;   /* ADD THIS - fixes flex child shrink bug */
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;      /* ADD THIS — prevents buttons from collapsing */
+  width: auto;         /* ADD THIS — overrides any inherited full-width rule */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f0f4ff;
+  border-color: #3b5bdb;
+  color: #3b5bdb;
+}
+
+.pagination-btn.active {
+  background: #3b5bdb;
+  border-color: #3b5bdb;
+  color: #fff;
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+  color: #667085;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.pagination-info {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #667085;
+}

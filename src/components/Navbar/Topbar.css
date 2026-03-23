@@ -1,0 +1,229 @@
+/* ── TOPBAR ── */
+.topbar {
+  height: 60px;
+  width: 100%;
+  background: #002060;
+  border-bottom: 2px solid #001540;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-family: Georgia, "Times New Roman", serif;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* LEFT */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-icon {
+  color: #ffffff;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.project-title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* RIGHT */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Admin button */
+.admin-btn {
+  background: #e6ecf5;
+  color: #002060;
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  transition: background 0.18s;
+}
+
+.admin-btn:hover {
+  background: #ccd8ed;
+}
+
+/* Profile section */
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-circle {
+  width: 34px;
+  height: 34px;
+  background: #e6ecf5;
+  border: 2px solid #ccd8ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #002060;
+  user-select: none;
+  transition: background 0.18s;
+}
+
+.profile-circle:hover {
+  background: #ccd8ed;
+}
+
+.dropdown-arrow {
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  position: fixed;
+  top: 62px;
+  right: 24px;
+  background: #ffffff;
+  min-width: 140px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  z-index: 99999;
+  border: 1px solid #e0e0e0;
+  animation: dropIn 0.15s ease;
+}
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: Georgia, serif;
+  color: #1a1a1a;
+  transition: background 0.15s;
+}
+
+.dropdown-item:hover {
+  background: #f2f5fb;
+}
+
+.logout {
+  color: #cc2200;
+  border-top: 1px solid #f0f0f0;
+}
+
+.logout:hover {
+  background: #fff5f5;
+}
+
+/* POPUP BACKDROP */
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 9998;
+}
+
+/* POPUP BOX */
+.popup-box {
+  position: fixed;
+  top: 62px;        /* just below topbar */
+  right: 24px;      /* aligned to right side */
+  left: auto;       /* remove centering */
+  transform: none;  /* remove center transform */
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 220px;
+  z-index: 9999;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  animation: popupIn 0.2s ease;
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* POPUP HEADER */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.popup-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #002060;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.popup-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0d1b3e;
+}
+
+.popup-role {
+  font-size: 12px;
+  color: #667799;
+  margin-top: 2px;
+}
+
+.popup-divider {
+  height: 1px;
+  background: #e8edf5;
+  margin-bottom: 14px;
+}
+
+/* POPUP BUTTONS */
+.popup-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  font-family: Georgia, serif;
+  color: #0d1b3e;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-bottom: 6px;
+}
+
+.popup-btn:hover { background: #f0f4fb; }
+
+.logout-btn { color: #cc2200; }
+.logout-btn:hover { background: #fff5f5; }

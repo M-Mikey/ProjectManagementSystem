@@ -1,0 +1,13 @@
+.main {
+    margin-top: 10px;
+    margin-right: 5px;
+    min-height: auto;
+    max-height: 100%;
+    overflow-x: hidden;    
+    width: 100%;
+    max-width: 100%;
+    background:#eef2fb;
+    border-radius: 15px;
+    display: flex;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

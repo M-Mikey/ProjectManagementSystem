@@ -1,0 +1,64 @@
+body {
+ /* margin: 0;*/
+  margin: 8px;   /* default browser margin */
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(to right, #cfdaf1, #eef2f9);
+}
+
+.login-card {
+  width: 360px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.15);
+  position: absolute;
+  right: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.login-card h2,
+.login-card h3 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.login-card button {
+  width: 100%;
+  padding: 10px;
+  background: #0a2c66;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.login-card button:hover {
+  background: #08306b;
+}
+
+.captcha-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.captcha-row input {
+  flex: 1;
+}
+
+p {
+  text-align: center;
+  color: #0a2c66;
+  cursor: pointer;
+  margin-top: 10px;
+}

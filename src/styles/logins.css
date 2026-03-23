@@ -1,0 +1,116 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(90deg, #bcd0f1 50%, #eef2f7 50%);
+}
+
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  /*background: linear-gradient(to right, #b8c9eb 60%, #7aa3e9 40%);*/
+   background: linear-gradient(to right, #b8c9eb 60%);
+}
+
+/* Left Branding */
+.login-left {
+  flex: 1;
+  padding: 80px;
+  color: #0b2b5b;
+}
+
+.login-left h1 {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+.login-left p {
+  font-size: 18px;
+  max-width: 400px;
+}
+
+/* Right Section */
+.login-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  width: 360px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.login-card h2 {
+  margin-bottom: 20px;
+  color: #0b2b5b;
+}
+
+.user-icon {
+  font-size: 18px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0b2b5b;
+}
+
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 10px;
+  background: #0b2b5b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #092248;
+}
+
+/* Validation */
+.error-text {
+  background: #fdecea;
+  color: #b71c1c;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.input-error {
+  border: 1px solid #b71c1c;
+  background: #fff5f5;
+}
+
+
+
+
+
+.field-error {
+  color: red;
+  font-size: 12px;
+}
+
+

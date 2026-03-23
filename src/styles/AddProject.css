@@ -1,0 +1,176 @@
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #dce6f5;
+}
+
+/* Layout */
+.main-layout {
+  display: flex;
+  height: calc(100vh - 55px);
+  overflow: hidden;
+}
+
+/* Content */
+.content {
+  background: #dce6f5;
+  flex: 1;
+  padding: 16px 32px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.content h2 {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  flex-shrink: 0;
+}
+
+/* Form Card — fills remaining height */
+.form-card {
+  background: #e8eef8;
+  border-radius: 12px;
+  padding: 18px 24px 16px;
+  border: 1px solid #c8d4ea;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Form group */
+.form-group {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #111;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1.5px solid #b5c2d8;
+  background: #ffffff;
+  font-size: 13px;
+  color: #222;
+  outline: none;
+  transition: border-color 0.2s;
+  height: 36px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #0b2d6b;
+}
+
+/* Two column row */
+.row {
+  display: flex;
+  gap: 20px;
+}
+
+.row .form-group {
+  flex: 1;
+  margin-bottom: 10px;
+}
+
+/* Notes */
+.note-box {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px 16px;
+  border: 1px solid #c8d4ea;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.note-box strong {
+  font-size: 13px;
+}
+
+.note-box ol {
+  margin: 5px 0 0 18px;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* Button */
+.btn-wrap {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.primary-btn {
+  background: #0b2d6b;
+  color: #fff;
+  border: none;
+  padding: 9px 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: background 0.2s;
+  white-space: nowrap;
+  width: auto;
+}
+
+.primary-btn:hover {
+  background: #0a2560;
+}
+
+/* Validation */
+.error-text {
+  color: #d32f2f;
+  font-size: 11px;
+  margin-top: 3px;
+  display: block;
+}
+
+.success-text {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.icon-btn {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 14px 0;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.icon-btn span {
+  display: block;
+  font-size: 11px;
+}
+
+.table-section {
+  margin-top: 25px;
+}
