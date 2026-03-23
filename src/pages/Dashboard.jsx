@@ -167,7 +167,7 @@ const Dashboard = () => {
             {error && <div className="alert alert-danger">{error}</div>}
 
             {/* Activities Table */}
-            <div className="table-responsive animate__animated animate__fadeInUp" style={{ maxHeight: "420px", overflowY: "auto" }}>
+            <div className="table-responsive animate__animated animate__fadeInUp" style={{ maxHeight: "calc(100vh - 320px)", overflowY: "auto" }}>
               <table className="table table-bordered table-hover align-middle">
                 <thead>
                   <tr>
