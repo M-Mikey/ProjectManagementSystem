@@ -24,8 +24,9 @@
 .table-responsive thead th {
   position: sticky;
   top: 0;
-  background: #fff;
-  z-index: 1;
+ background: #0b2a5b;
+  color: #fff;
+  z-index: 2;
 }
 
 
