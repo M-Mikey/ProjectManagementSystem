@@ -31,6 +31,7 @@ import UserAck from "./User/UserAcknowledge";
 import UserAcknowledgeTask from "./User/UserAcknowledgeTask"; // ✅ NEW
 import UserDashboard from "./User/UserDashboard";
 import Reports from "./pages/Report";
+import NotificationsPage from './components/Navbar/NotificationsPage';  
 
 import TaskCompletionApprovalDetails from "./pages/TaskCompletionApprovalDetails";
 
@@ -116,6 +117,10 @@ export default function App() {
         {/* ── User Dashboard ── */}
         <Route path="/user_dashboard" element={
           <ProtectedRoute><UserDashboard /></ProtectedRoute>
+        } />
+
+        <Route path="/notifications" element={
+          <ProtectedRoute><NotificationsPage /></ProtectedRoute>
         } />
 
       </Routes>
