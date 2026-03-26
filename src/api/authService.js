@@ -58,38 +58,36 @@ export async function setNewPasswordApi(data) {
 
 
 export async function verifyOtpApi(data) {
-  try {
-    const response = await fetch(`${API_URL}/v1/Authentication/verify-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+        const response = await fetch(
+            `${API_URL}/v1/Authentication/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
 
-    const result = await response.json();
+        const result = await response.json();
 
-    // If API returns 400 / 500
-    if (!response.ok) {
-      return {
-        success: false,
-        message: result.message || "OTP verification failed",
-      };
+        if (!response.ok) {
+            return {
+                success: false,
+                message: result.message || "OTP verification failed",
+            };
+        }
+
+        return {
+            success:  result.success,
+            message:  result.message,
+            pstatus:  result.p_status,
+            utype:    result.u_type,
+            urole:    result.u_role,      // NEW
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: "Server not reachable",
+        };
     }
-
-    // Success response
-    return {
-      success: result.success,
-      message: result.message,
-      pstatus: result.p_status,
-      utype: result.u_type,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Server not reachable",
-    };
-  }
 }
 
 

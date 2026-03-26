@@ -85,19 +85,22 @@ export default function OtpVerify() {
       });
 
       if (response?.success) {
-        toast.success("OTP verified successfully");
+    toast.success("OTP verified successfully");
 
-        sessionStorage.setItem("userId", state.userName);
-        sessionStorage.setItem("usertype", response.utype);
+  
+    sessionStorage.setItem("userId",    state.userName);
+    sessionStorage.setItem("usertype",  response.utype);
+    sessionStorage.setItem("userRole",  response.urole);   
+    sessionStorage.setItem("userName",  state.userName);   
 
-        if (response.pstatus === "t" || ptype === "f") {
-          navigate("/set-password", {
+    if (response.pstatus === "t" || ptype === "f") {
+        navigate("/set-password", {
             state: { userName: state.userName },
-          });
-        } else {
-          navigate("/dashboard");
-        }
-      } else {
+        });
+    } else {
+        navigate("/dashboard");
+    }
+} else {
         toast.error(response?.message || "Invalid OTP");
         setErrors({ otp: true });
         otpRef.current.focus();

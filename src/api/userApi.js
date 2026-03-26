@@ -1,101 +1,154 @@
 import { API_URL } from "./apiConfig";
-const BASE_URL = "https://localhost:7255";
 
-export const getUsers2 = (params) =>
-  fetch(`${API_URL}/v1/users?${new URLSearchParams(params)}`).then(r => r.json());
+// GET users with filters
+export const getUsers = async (params) => {
+    const query = new URLSearchParams();
+    if (params?.userName) query.append("userName", params.userName);
+    if (params?.userType) query.append("userType", params.userType);
+    if (params?.status)   query.append("status",   params.status);
 
-
-export const getUsers = async (params) => { 
-  const res = await fetch(`${API_URL}/v1/users?${new URLSearchParams(params)}`);
-  const data = await res.json();
-
-  // ✅ force array
-  return Array.isArray(data) ? data : data.data ?? [];
-};
-
-
-export async function createUser(data) {
-  try {
-    const res = await fetch(`${API_URL}/v1/user/CreateUser`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    const result = await res.json();
-
+    const res = await fetch(`${API_URL}/v1/users/GetUsers?${query}`);
+    
+    // Handle non-200 responses safely
     if (!res.ok) {
-      return { success: false, message: result.message };
+        console.error(`GetUsers failed: ${res.status} ${res.statusText}`);
+        return [];
     }
 
-    return { success: true, message: result.message };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Server not reachable",
-    };
-  }
-}
+    const text = await res.text();
+    if (!text) return [];
+    
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data : [];
+};
 
+// Search users by username (for dropdown)
+export const searchUsers = async (userName) => {
+    const res = await fetch(
+        `${API_URL}/v1/users/GetUsersByUserName?userName=${userName}`
+    );
+    if (!res.ok) throw new Error("Failed to search users");
+    return await res.json();
+};
+
+// Add external user
 export const addUser = async (data) => {
-  const res = await fetch(`${API_URL}/v1/users/add`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error("Backend error:", errorText);
-    throw new Error(errorText);
-  }
-
-  return await res.json();
+    const res = await fetch(`${API_URL}/v1/users/CreateUser`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to add user");
+    return result;
 };
 
-
-export const addUser1 = async (data) => {
-  const res = await fetch(`${API_URL}/users/add`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    console.error(res);
-    throw new Error("Failed to add user",error);
-  }
-
-  return true;
-};
-;
-
+// Update external user
 export const updateUser = async (data) => {
-  const res = await fetch(`${API_URL}/users/update`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    throw new Error("Failed to update user");
-  }
+    const res = await fetch(`${API_URL}/v1/users/UpdateUser`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to update user");
+    return result;
+};
 
-  return true;
+// Assign or remove admin role
+export const manageAdminRole = async (data) => {
+    const res = await fetch(`${API_URL}/v1/users/ManageAdminRole`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+    });
+
+    const text = await res.text();
+    const result = text ? JSON.parse(text) : {};
+
+    
+    if (!res.ok || result.success === false) {
+        throw new Error(result.message || "Failed to update admin role");
+    }
+    return result;
+};
+
+// // Get user profile
+// export const getUserProfile = async (userName) => {
+//     const res = await fetch(
+//         `${API_URL}/v1/users/GetUserProfile/${userName}`
+//     );
+//     if (!res.ok) throw new Error("Failed to fetch user profile");
+//     return await res.json();
+// };
+
+
+// Get user authorities
+export const getUserAuthorities = async (userName) => {
+    const res = await fetch(
+        `${API_URL}/v1/users/GetUserAuthorities?userName=${userName}`
+    );
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : [];
+    if (!res.ok) throw new Error(data.message || "Failed to fetch authorities");
+    return Array.isArray(data) ? data : [];
 };
 
 
 export const getUserProfile = async (userName) => {
-  const response = await fetch(`${API_URL}/v1/users/GetUserProfile/${userName}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
+    const res = await fetch(
+        `${API_URL}/v1/users/GetUserProfiles/${userName}`
+    );
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!res.ok) throw new Error(data?.message || "Failed to fetch profile");
+    return data;
+};
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch user profile");
-  }
 
-  return await response.json();
+// Get all authorities for dropdown
+export const getAllAuthorities = async () => {
+    const res  = await fetch(`${API_URL}/v1/users/GetAllAuthorities`);
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : [];
+    if (!res.ok) throw new Error(data.message || "Failed to fetch authorities");
+    return Array.isArray(data) ? data : [];
+};
+
+// Save user authorities
+export const saveUserAuthorities = async (data) => {
+    const res = await fetch(`${API_URL}/v1/users/SaveUserAuthorities`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+    });
+    const text   = await res.text();
+    const result = text ? JSON.parse(text) : {};
+    if (!res.ok) throw new Error(result.message || "Failed to save authorities");
+    return result;
+};
+
+// Unlock user
+export const unlockUser = async (data) => {
+    const res = await fetch(`${API_URL}/v1/users/UnlockUser`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(data),
+    });
+    const text   = await res.text();
+    const result = text ? JSON.parse(text) : {};
+    if (!res.ok) throw new Error(result.message || "Failed to unlock user");
+    return result;
+};
+
+// Get login history
+export const getLoginHistory = async (userName) => {
+    const url = userName
+        ? `${API_URL}/v1/users/GetLoginHistory?userName=${userName}`
+        : `${API_URL}/v1/users/GetLoginHistory`;
+    const res  = await fetch(url);
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : [];
+    if (!res.ok) throw new Error(data.message || "Failed to fetch login history");
+    return Array.isArray(data) ? data : [];
 };
