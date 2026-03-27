@@ -96,25 +96,24 @@ export default function App() {
         <Route path="/task_completion_approval_details/:taskDtlId" element={
           <ProtectedRoute><TaskCompletionApprovalDetails /></ProtectedRoute>
         } />
-        {/* ❌ REMOVED task_assignment_approval_details route */}
+        
 
-        {/* ── Reports ── */}
+       
         <Route path="/reports" element={
           <ProtectedRoute><Reports /></ProtectedRoute>
         } />
 
-        {/* ── User ACK Routes ── */}
-        {/* Project + Milestone ACK */}
+    
         <Route path="/user_acknowledge/:projectId" element={
           <ProtectedRoute><UserAck /></ProtectedRoute>
         } />
 
-        {/* ✅ NEW — Task ACK */}
+      
         <Route path="/user_acknowledge_task/:projectId/:milestoneId/:parentTaskId/:taskDtlId" element={
           <ProtectedRoute><UserAcknowledgeTask /></ProtectedRoute>
         } />
 
-        {/* ── User Dashboard ── */}
+      
         <Route path="/user_dashboard" element={
           <ProtectedRoute><UserDashboard /></ProtectedRoute>
         } />

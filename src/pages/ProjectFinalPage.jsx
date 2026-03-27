@@ -3,12 +3,8 @@ import Topbar from "../components/Navbar/Topbar";
 import Navbar from "../components/Navbar/Navbar";
 import "../styles/AddProject.css";
 import { useNavigate } from "react-router-dom";
-// FIX 4 + 12: removed getAppLevel import — loadAppLevel was broken (called with no arg)
-// and this page is read-only so no API call needed for approval levels
 import { saveProject } from "../api/projectService";
 
-// FIX 9 + 10: same dummy data as AddProject & MilestonePage for label resolution
-// TODO: replace with real API data once client provides table/structure
 const DUMMY_APPROVAL_LEVELS = [
   { level: "1", approvalLevel: "Level 1", approvalName: "Department Head" },
   { level: "2", approvalLevel: "Level 2", approvalName: "Division Head" },
@@ -17,23 +13,16 @@ const DUMMY_APPROVAL_LEVELS = [
   { level: "5", approvalLevel: "Level 5", approvalName: "Senior Director" },
 ];
 
-// FIX 10: priority label map — numeric value → display label
 const PRIORITY_LABEL = { "1": "Critical", "2": "High", "3": "Medium", "4": "Low" };
 
-// Helper: resolve approval level number to full label string
 const getApprovalLabel = (levelValue) => {
   const found = DUMMY_APPROVAL_LEVELS.find(lv => lv.level === String(levelValue));
   return found ? `${found.approvalLevel} - ${found.approvalName}` : levelValue || "—";
 };
 
-// FIX 1: renamed component from AddProject → ProjectFinalPage (matches file name)
 export default function ProjectFinalPage() {
-
   const navigate = useNavigate();
-
-  // FIX 5: removed unused errors state
   const [successMsg, setSuccessMsg] = useState("");
-  // FIX 11: saving state to prevent duplicate API calls on double-click
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
@@ -43,38 +32,26 @@ export default function ProjectFinalPage() {
     projectcode: "",
     projectLPL: "",
     hsdm: "",
-    severityLevel: "",   // FIX 8: added severityLevel to form state
+    severityLevel: "",
     approvalLevel: null,
     userid: "",
-    noteAccepted: false, // FIX 6: added noteAccepted to form state
+    noteAccepted: false,
   });
 
   const [milestones, setMilestones] = useState([]);
 
-  /* ================= LOAD SESSION DATA ================= */
   useEffect(() => {
-    // FIX 3: removed broken loadAppLevel() call (was called with no argument)
-    // Approval levels are resolved from DUMMY_APPROVAL_LEVELS directly
-
     const savedProject = sessionStorage.getItem("projectForm");
-    if (savedProject) {
-      setForm(JSON.parse(savedProject));
-    }
+    if (savedProject) setForm(JSON.parse(savedProject));
 
     const savedMilestones = sessionStorage.getItem("milestones");
-    if (savedMilestones) {
-      setMilestones(JSON.parse(savedMilestones));
-    }
+    if (savedMilestones) setMilestones(JSON.parse(savedMilestones));
   }, []);
 
-  // FIX 4: removed handleChange — this is a read-only review page, no fields are editable
-
-  /* ================= SAVE ================= */
   const handleSave = async () => {
-    if (saving) return; 
+    if (saving) return;
     setSaving(true);
 
- 
     const projectPayload = {
       project: {
         projectId: 0,
@@ -98,7 +75,7 @@ export default function ProjectFinalPage() {
         milestoneName: m.milestoneName,
         description: m.description,
         dueDate: m.dueDate,
-        priority: m.priority ? String(m.priority) : null,   // C# expects string not int
+        priority: m.priority ? String(m.priority) : null,
         assignedTo: m.assignedUser?.userName || m.assignedTo || "",
         assignedToName: m.assignedUser?.name || m.assignedToName || "",
         approvalLevel: m.approvalLevel ? parseInt(m.approvalLevel) : 1,
@@ -108,13 +85,10 @@ export default function ProjectFinalPage() {
       }))
     };
 
-    // C# [FromBody] SaveProjectRequest deserializes body directly — no wrapper needed
-    const payload = projectPayload;
-
-    console.log("payload", payload);
+    console.log("payload", projectPayload);
 
     try {
-      const result = await saveProject(payload);
+      const result = await saveProject(projectPayload);
       console.log("Saved:", result);
       setSuccessMsg("Project & milestones saved successfully!");
       sessionStorage.removeItem("projectForm");
@@ -128,71 +102,61 @@ export default function ProjectFinalPage() {
       console.error(error);
       alert(error.message || "Error saving data");
     } finally {
-      setSaving(false); // FIX 11: always release saving lock
+      setSaving(false);
     }
   };
 
-  // FIX 2: removed the 42-line commented-out old handleSave block entirely
-
-  const handlePrev = () => {
-    navigate("/milestone");
-  };
+  const handlePrev = () => navigate("/milestone");
 
   return (
     <div className="app-container">
       <Topbar />
-      <div className="main-layout">
+      {/* FIX: d-flex is mandatory — without it Navbar and main stack vertically,
+          creating the blank space visible above the sidebar icons */}
+      <div className="main-layout d-flex">
         <Navbar />
 
-        <main className="page-container">
+        <main className="flex-grow-1 page-container">
 
-          <h2>Project & Milestones Details</h2>
+          <h2>Project &amp; Milestones Details</h2>
 
           <div className="form-card">
 
             {successMsg && (
-              <div className="success-text">
-                {successMsg}
-              </div>
+              <div className="success-text">{successMsg}</div>
             )}
 
-            {/* ================= PROJECT DETAILS (read-only) ================= */}
-
+            {/* ===== PROJECT FIELDS (read-only) ===== */}
             <div className="row">
               <div className="form-group">
                 <label>Name:</label>
-                <input name="name" value={form.name || ""} disabled />
+                <input value={form.name || ""} disabled />
               </div>
-
               <div className="form-group">
                 <label>Description:</label>
-                <input name="purpose" value={form.purpose || ""} disabled />
+                <input value={form.purpose || ""} disabled />
               </div>
             </div>
 
             <div className="row">
               <div className="form-group">
                 <label>Target Date:</label>
-                <input name="timeline" value={form.timeline || ""} disabled />
+                <input value={form.timeline || ""} disabled />
               </div>
-
               <div className="form-group">
                 <label>Project Leader (PL):</label>
-                <input name="projectLPL" value={form.projectLPL || ""} disabled />
+                <input value={form.projectLPL || ""} disabled />
               </div>
             </div>
 
             <div className="row">
               <div className="form-group">
                 <label>Project Type (Optional):</label>
-                <input name="hsdm" value={form.hsdm || ""} disabled />
+                <input value={form.hsdm || ""} disabled />
               </div>
-
               <div className="form-group">
                 <label>Project Severity Level:</label>
-                {/* FIX 8: show severity label resolved from numeric value */}
                 <input
-                  name="severityLevel"
                   value={PRIORITY_LABEL[form.severityLevel] || form.severityLevel || ""}
                   disabled
                 />
@@ -202,12 +166,7 @@ export default function ProjectFinalPage() {
             <div className="row">
               <div className="form-group">
                 <label>Project Approval Level:</label>
-                {/* FIX 9: show resolved label text instead of broken disabled select */}
-                <input
-                  name="approvalLevel"
-                  value={getApprovalLabel(form.approvalLevel)}
-                  disabled
-                />
+                <input value={getApprovalLabel(form.approvalLevel)} disabled />
               </div>
             </div>
 
@@ -219,44 +178,78 @@ export default function ProjectFinalPage() {
               </ol>
             </div>
 
-            {/* ================= MILESTONE TABLE ================= */}
-
+            {/* ===== MILESTONE TABLE — scrollable for 10+ rows ===== */}
             <div className="table-section">
-              <div className="table-responsive">
-                <table className="table table-bordered table-hover">
-                  <thead>
+              {/* milestone count badge — useful UX signal when rows > visible area */}
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-semibold">
+                  Milestones
+                  <span
+                    className="badge bg-secondary ms-2"
+                    style={{ fontSize: "0.75rem" }}
+                  >
+                    {milestones.length}
+                  </span>
+                </span>
+              </div>
+
+              {/*
+                KEY FIX for 10+ milestones:
+                - maxHeight caps the visible area at ~5 rows (~320px).
+                - overflowY: auto adds vertical scrollbar only when needed.
+                - The wrapper div is what scrolls; the table itself is full-width inside.
+                - thead position: sticky + top: 0 + zIndex: 1 keeps headers pinned
+                  while body rows scroll underneath — critical for usability with many rows.
+                - background on thead cells prevents content bleed-through on scroll.
+              */}
+              <div
+                className="table-responsive"
+                style={{
+                  maxHeight: "320px",
+                  overflowY: "auto",
+                  border: "1px solid #dee2e6",
+                  borderRadius: "4px",
+                }}
+              >
+                <table className="table table-bordered table-hover mb-0">
+                  <thead
+                    style={{
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 1,
+                      backgroundColor: "#1a2f5a", // matches your dark header color
+                    }}
+                  >
                     <tr>
-                      <th>#</th>
-                      <th>Milestone Name</th>
-                      <th>Description</th>
-                      <th>Due Date</th>
-                      <th>Priority</th>
-                      <th>Approval Level</th>
-                      <th>Assigned To</th>
+                      <th style={{ width: "44px", color: "#fff" }}>#</th>
+                      <th style={{ color: "#fff" }}>Milestone Name</th>
+                      <th style={{ color: "#fff" }}>Description</th>
+                      <th style={{ width: "110px", color: "#fff" }}>Due Date</th>
+                      <th style={{ width: "90px", color: "#fff" }}>Priority</th>
+                      <th style={{ width: "180px", color: "#fff" }}>Approval Level</th>
+                      <th style={{ color: "#fff" }}>Assigned To</th>
                     </tr>
                   </thead>
                   <tbody>
                     {milestones.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="text-center">
+                        <td colSpan="7" className="text-center text-muted py-3">
                           No milestones added yet
                         </td>
                       </tr>
                     ) : (
                       milestones.map((m, index) => (
-                        <tr key={m.id}>
+                        <tr key={m.id ?? index}>
                           <td>{index + 1}</td>
                           <td>{m.milestoneName}</td>
                           <td>{m.description}</td>
                           <td>{m.dueDate}</td>
-                          {/* FIX 10: resolve numeric priority to label */}
-                          <td>{PRIORITY_LABEL[m.priority] || m.priority}</td>
-                          {/* FIX 7: show actual approval level per milestone */}
+                          <td>{PRIORITY_LABEL[m.priority] || m.priority || "—"}</td>
                           <td>{getApprovalLabel(m.approvalLevel)}</td>
                           <td>
                             {m.assignedUser
                               ? `${m.assignedUser.name} - ${m.assignedUser.userName}`
-                              : m.assignedTo}
+                              : m.assignedTo || "—"}
                           </td>
                         </tr>
                       ))
@@ -264,9 +257,16 @@ export default function ProjectFinalPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Overflow hint — only rendered when rows exceed visible area threshold */}
+              {milestones.length > 5 && (
+                <p className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
+                  Scroll to view all {milestones.length} milestones.
+                </p>
+              )}
             </div>
 
-            <div className="btn-wrap d-flex justify-content-end" style={{ gap: 10 }}>
+            <div className="btn-wrap d-flex justify-content-end mt-3" style={{ gap: 10 }}>
               <button
                 className="primary-btn btn-sm"
                 onClick={handlePrev}
@@ -274,7 +274,6 @@ export default function ProjectFinalPage() {
               >
                 Back
               </button>
-              {/* FIX 11: disabled while saving, shows loading text */}
               <button
                 className="primary-btn btn-sm"
                 onClick={handleSave}

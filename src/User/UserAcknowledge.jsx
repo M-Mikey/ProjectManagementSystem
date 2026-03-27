@@ -196,7 +196,7 @@ const UserAcknowledge = () => {
               <div className="row g-3">
 
                 {/* ── LEFT SIDE */}
-                <div className="col-lg-8">
+                <div className="col-lg-7">
 
                   {/* Project Details */}
                   <div className="card shadow-sm mb-3">

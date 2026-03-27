@@ -116,14 +116,18 @@ export const updateTaskStatus = async (payload) => {
 
 
 export const submitTaskCompletion = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/submitTaskCompletion`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to submit task completion");
-  return data;
+    const response = await fetch(
+        `${API_URL}/v1/Task/submitTaskCompletion`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }
+    );
+    const data = await response.json();
+    if (!response.ok)
+        throw new Error(data.message || "Failed to submit task completion");
+    return data; 
 };
 
 export const getTaskCompletionApprovals = async (userId, status) => {
