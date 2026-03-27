@@ -12,6 +12,7 @@ import {
   updateTask as updateTaskApi,
   
 } from "../api/taskService";
+import CollabSpace from "../components/Collabspace";
 
 import {
   requestTimelineChange,
@@ -141,6 +142,10 @@ const ProjectDetails = () => {
   const [subSaving, setSubSaving]                 = useState(false);
   const [editSaving, setEditSaving]               = useState(false);
   const [expandedTasks, setExpandedTasks]         = useState({});
+
+
+// Add:
+const [activeTab, setActiveTab] = useState("milestones");
 
 
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
@@ -1287,6 +1292,59 @@ const isMilestoneApproved = (milestone) => {
           )}
 
           {/* Milestone Table */}
+         {/* ── Tab Bar ── */}
+          <div style={{
+            display: "flex", gap: "4px",
+            borderBottom: "2px solid #e9ecef",
+            marginBottom: "20px"
+          }}>
+            <button
+              onClick={() => setActiveTab("milestones")}
+              style={{
+                background:    "none",
+                border:        "none",
+                borderBottom:  activeTab === "milestones"
+                  ? "2px solid #1a3c5e" : "2px solid transparent",
+                marginBottom:  "-2px",
+                padding:       "10px 20px",
+                fontWeight:    activeTab === "milestones" ? 700 : 500,
+                color:         activeTab === "milestones" ? "#1a3c5e" : "#6c757d",
+                cursor:        "pointer",
+                fontSize:      "14px",
+                transition:    "all 0.15s"
+              }}
+            >
+              <i className="bi bi-flag me-2" />
+              Milestones & Tasks
+            </button>
+            <button
+              onClick={() => setActiveTab("collab")}
+              style={{
+                background:    "none",
+                border:        "none",
+                borderBottom:  activeTab === "collab"
+                  ? "2px solid #1a3c5e" : "2px solid transparent",
+                marginBottom:  "-2px",
+                padding:       "10px 20px",
+                fontWeight:    activeTab === "collab" ? 700 : 500,
+                color:         activeTab === "collab" ? "#1a3c5e" : "#6c757d",
+                cursor:        "pointer",
+                fontSize:      "14px",
+                transition:    "all 0.15s"
+              }}
+            >
+              <i className="bi bi-chat-dots me-2" />
+              Collaboration
+            </button>
+          </div>
+
+          {/* ── Collab Tab ── */}
+          {activeTab === "collab" && (
+            <CollabSpace projectId={parseInt(projectId)} />
+          )}
+
+          {/* Milestone Table */}
+          {activeTab === "milestones" && (
           <div className="pd-card">
             <div style={{ overflowX: "auto" }}>
               <table className="pd-table">
@@ -1484,6 +1542,7 @@ const isMilestoneApproved = (milestone) => {
               </table>
             </div>
           </div>
+          )}
 
           {/* ===== CREATE TASK MODAL ===== */}
           {showModal && (
