@@ -1,12 +1,9 @@
-import { API_URL } from "./apiConfig";
+import { authFetch } from "../utils/authFetch";
 
 export const saveProject = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/project/saveProject`, {
+  const response = await authFetch(`/v1/project/saveProject`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -17,12 +14,9 @@ export const saveProject = async (payload) => {
   return response.json();
 };
 
-
 export async function getProjects(userId) {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/project/GetProjects/${userId}`
-    );
+    const response = await authFetch(`/v1/project/GetProjects/${userId}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch projects");
@@ -37,17 +31,13 @@ export async function getProjects(userId) {
 
 export async function getProjectById(projectId) {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/project/GetProjectById/${projectId}`
-    );
+    const response = await authFetch(`/v1/project/GetProjectById/${projectId}`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch project");
     }
 
-    const data = await response.json();
-    return data;
-
+    return await response.json();
   } catch (error) {
     console.error("API Error:", error);
     throw error;
@@ -55,9 +45,8 @@ export async function getProjectById(projectId) {
 }
 
 export const addProject = async (data) => {
-  const res = await fetch(`${API_URL}/v1/users/add`, {
+  const res = await authFetch(`/v1/users/add`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
@@ -70,11 +59,9 @@ export const addProject = async (data) => {
   return await res.json();
 };
 
-
 export const updateProject = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/project/updateProject`, {
-    method: "POST",   
-    headers: { "Content-Type": "application/json" },
+  const response = await authFetch(`/v1/project/updateProject`, {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   const data = await response.json();
@@ -83,12 +70,42 @@ export const updateProject = async (payload) => {
 };
 
 export const updateMilestone = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/project/updateMilestone`, {
-    method: "POST",  
-    headers: { "Content-Type": "application/json" },
+  const response = await authFetch(`/v1/project/updateMilestone`, {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || "Failed to update milestone");
   return data;
+};
+
+export async function checkProjectNameExists(projectName, excludeProjectId = null) {
+  const params = new URLSearchParams({ name: projectName.trim() });
+  if (excludeProjectId != null) params.append("excludeId", excludeProjectId);
+
+  const res = await authFetch(`/v1/project/CheckNameExists?${params.toString()}`);
+
+  if (!res.ok) {
+    throw new Error(`Name check failed with status ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.exists;
+}
+
+
+export const getProjectApprovalChain = async (projectId) => {
+    const response = await authFetch(`/v1/project/GetProjectApprovalChain/${projectId}`);
+    if (!response.ok) throw new Error("Failed to fetch approval chain");
+    return await response.json();
+};
+
+export const saveMilestone = async (payload) => {
+    const response = await authFetch(`/v1/project/SaveMilestone`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Failed to save milestone");
+    return data;
 };

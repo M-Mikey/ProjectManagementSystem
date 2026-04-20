@@ -31,7 +31,7 @@
 
 
 /* Fix: Constrain the main layout to viewport height */
-.app-container {
+/* .app-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -41,18 +41,18 @@
 .main-layout {
   flex: 1;
   overflow: hidden; /* prevent children from pushing layout */
-  min-height: 0;    /* important for flex children to shrink */
-}
+  /* min-height: 0;    important for flex children to shrink
+} */
 
 /* Navbar stays full height, doesn't grow */
-.main-layout > nav,
+/* .main-layout > nav,
 .main-layout > .navbar {
   overflow-y: auto;
   flex-shrink: 0;
-}
+} */
 
 /* Content area scrolls internally */
-.main-layout .flex-grow-1 {
+/* .main-layout .flex-grow-1 {
   overflow-y: auto;
   min-height: 0;
-}
+/* } */ 

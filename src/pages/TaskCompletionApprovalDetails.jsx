@@ -156,9 +156,9 @@ const isActioned = taskRow?.approvalStatus === 1 || // Approved
 
   return (
     <div className="app-container">
-      <Topbar />
+      {/* <Topbar /> */}
       <div className="main-layout d-flex">
-        <Navbar />
+        {/* <Navbar /> */}
 
         <div className="flex-grow-1"
           style={{ overflowY: "auto", height: "calc(100vh - 60px)" }}>

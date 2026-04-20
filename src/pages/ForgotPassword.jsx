@@ -73,11 +73,11 @@ export default function ForgotPassword() {
   return (
     <div className="login-container">
       <div className="row">
-        <div className="col-lg-6 col-md-6 col-12">
+        <div className="col-lg-5 col-md-5 col-12">
           <Common />
         </div>
 
-        <div className="col-lg-6 col-md-6 col-12">
+        <div className="col-lg-5 col-md-5 col-12">
           <div className="right">
             <div className="login-box">
               <h2>
@@ -85,7 +85,7 @@ export default function ForgotPassword() {
               </h2>
 
               <label>{user}</label>
-              <input
+              {/* <input
                 type="text"
                 ref={userNameRef}
                 placeholder={placeholder}
@@ -95,8 +95,20 @@ export default function ForgotPassword() {
                   setErrors({ ...errors, userName: false }); // remove red when typing
                 }}
                 className={`form-control ${errors.userName ? "input-error" : ""}`}
+              /> */}
+              <input
+                type="text"
+                ref={userNameRef}
+                placeholder={placeholder}
+                value={userName}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.startsWith(" ")) return; // no leading space
+                  setUserName(val);
+                  setErrors({ ...errors, userName: false });
+                }}
+                className={`form-control ${errors.userName ? "input-error" : ""}`}
               />
-
               <button
                 className="mt-3 mb-2"
                 onClick={handleOtp}

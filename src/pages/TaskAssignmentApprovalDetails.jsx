@@ -106,9 +106,9 @@ const TaskAssignmentApprovalDetails = () => {
 
   return (
     <div className="app-container">
-      <Topbar />
+      {/* <Topbar /> */}
       <div className="main-layout d-flex" style={{ minHeight: "100vh" }}>
-        <Navbar />
+        {/* <Navbar /> */}
 
         <div className="flex-grow-1" style={{ overflowY: "auto", height: "100vh" }}>
           <div className="container-fluid p-4">

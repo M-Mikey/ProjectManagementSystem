@@ -110,11 +110,11 @@ export default function ProjectFinalPage() {
 
   return (
     <div className="app-container">
-      <Topbar />
+      {/* <Topbar /> */}
       {/* FIX: d-flex is mandatory — without it Navbar and main stack vertically,
           creating the blank space visible above the sidebar icons */}
       <div className="main-layout d-flex">
-        <Navbar />
+        {/* <Navbar /> */}
 
         <main className="flex-grow-1 page-container">
 

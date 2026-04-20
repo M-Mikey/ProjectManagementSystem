@@ -330,9 +330,9 @@ const Reports = () => {
   // ─────────────────────────────────────────
   return (
     <div className="app-container">
-      <Topbar />
+      {/* <Topbar /> */}
       <div className="main-layout d-flex">
-        <Navbar />
+        {/* <Navbar /> */}
 
         <div className="flex-grow-1">
           <div className="content container-fluid p-4">
@@ -356,7 +356,7 @@ const Reports = () => {
 
             {error && <div className="alert alert-danger">{error}</div>}
 
-            {/* Summary Cards */}
+            {/* Summary Cards
             <div className="row g-3 mb-4">
               {[
                 { label: "Total Tasks",  value: totalTasks,    color: "primary" },
@@ -371,7 +371,7 @@ const Reports = () => {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Tabs */}
             <ul className="nav nav-tabs mb-4 justify-content-end">
@@ -395,7 +395,7 @@ const Reports = () => {
               ))}
             </ul>
 
-            {/* ── TAB: PROJECT SUMMARY ── */}
+           
             {activeTab === "summary" && (
               <div>
                 {loading ? (

@@ -1,15 +1,11 @@
-import { API_URL } from "./apiConfig";
-
+import { authFetch } from "../utils/authFetch";
 
 export const getApprovalAuthorities = async () => {
-    const response = await fetch(
-        `${API_URL}/v1/ApprovalAuthorities/GetApprovalLevel`
-    );
+  const response = await authFetch(`/v1/ApprovalAuthorities/GetApprovalLevel`);
 
-    if (!response.ok) {
-        throw new Error("Failed to fetch approval authorities");
-    }
+  if (!response.ok) {
+    throw new Error("Failed to fetch approval authorities");
+  }
 
-    return await response.json();
+  return await response.json();
 };
-

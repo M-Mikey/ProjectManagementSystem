@@ -44,10 +44,10 @@ const ProjectApproval = () => {
 
   return (
     <>
-      <Topbar />
+      {/* <Topbar /> */}
       <div class="d-flex">
         {/* <!-- Sidebar --> */}
-        <Navbar />
+        {/* <Navbar /> */}
 
         {/* <!-- Main Content --> */}
         <div className="main" id={flexGrow}>

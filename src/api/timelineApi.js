@@ -1,16 +1,11 @@
-import { API_URL } from "./apiConfig";
+import { authFetch } from "../utils/authFetch";
 
-// PL submits request
 export const requestTimelineChange = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/request-change`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/timeline/request-change`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to submit request");
@@ -21,19 +16,13 @@ export const requestTimelineChange = async (payload) => {
   }
 };
 
-// Creator updates project timeline
 export const updateProjectTimeline = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/update-project`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/timeline/update-project`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
 
-    // ✅ Check if response is JSON first
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const text = await response.text();
@@ -50,17 +39,12 @@ export const updateProjectTimeline = async (payload) => {
   }
 };
 
-// Creator updates milestone date
 export const updateMilestoneTimeline = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/update-milestone`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/timeline/update-milestone`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to update milestone date");
@@ -71,17 +55,12 @@ export const updateMilestoneTimeline = async (payload) => {
   }
 };
 
-// Creator approves/rejects PL request
 export const approveTimelineChange = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/approve-change`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/timeline/approve-change`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to process request");
@@ -92,11 +71,10 @@ export const approveTimelineChange = async (payload) => {
   }
 };
 
-// Get timeline change requests
 export const getTimelineRequests = async (projectId, userId) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/get-requests/${projectId}/${userId}`
+    const response = await authFetch(
+      `/v1/timeline/get-requests/${projectId}/${userId}`
     );
     if (!response.ok)
       throw new Error("Failed to fetch timeline requests");
@@ -107,11 +85,10 @@ export const getTimelineRequests = async (projectId, userId) => {
   }
 };
 
-// Get ALL timeline requests for user (across all projects)
 export const getAllTimelineRequests = async (userId) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/get-all-requests/${userId}`
+    const response = await authFetch(
+      `/v1/timeline/get-all-requests/${userId}`
     );
     if (!response.ok)
       throw new Error("Failed to fetch timeline requests");
@@ -122,11 +99,10 @@ export const getAllTimelineRequests = async (userId) => {
   }
 };
 
-// Get timeline history for a project
 export const getTimelineHistory = async (projectId) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/timeline/get-history/${projectId}`
+    const response = await authFetch(
+      `/v1/timeline/get-history/${projectId}`
     );
     if (!response.ok)
       throw new Error("Failed to fetch timeline history");

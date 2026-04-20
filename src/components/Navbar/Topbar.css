@@ -227,3 +227,28 @@
 
 .logout-btn { color: #cc2200; }
 .logout-btn:hover { background: #fff5f5; }
+
+
+/* Hamburger button */
+.hamburger-btn {
+  background:    transparent;
+  border:        none;
+  color:         #ffffff;
+  font-size:     1.25rem;
+  padding:       4px 8px;
+  border-radius: 4px;
+  cursor:        pointer;
+  display:       flex;
+  align-items:   center;
+  transition:    background 0.15s ease;
+  margin-right:  8px;
+}
+
+.hamburger-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hamburger-btn:focus-visible {
+  outline:        2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}

@@ -1,15 +1,9 @@
-import { API_URL } from "./apiConfig";
-import axios from "axios";
+import { authFetch } from "../utils/authFetch";
 
 export const createTask = async (payload) => {
   try {
-    const response = await fetch(`${API_URL}/v1/Task/saveTask`, {
+    const response = await authFetch(`/v1/Task/saveTask`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Uncomment if using JWT
-        // "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
       body: JSON.stringify(payload),
     });
 
@@ -27,12 +21,9 @@ export const createTask = async (payload) => {
 };
 
 export const saveSubTask = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/save-sub-task`, {
+  const response = await authFetch(`/v1/Task/save-sub-task`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   const data = await response.json();
@@ -47,8 +38,8 @@ export const saveSubTask = async (payload) => {
 
 export const getTasksByMilestone = async (projectId, milestoneId) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/Task/by-milestone?projectId=${projectId}&milestoneId=${milestoneId}`
+    const response = await authFetch(
+      `/v1/Task/by-milestone?projectId=${projectId}&milestoneId=${milestoneId}`
     );
 
     if (!response.ok) {
@@ -62,12 +53,9 @@ export const getTasksByMilestone = async (projectId, milestoneId) => {
   }
 };
 
-
-
 export const createRemark = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/AddRemark`, {
+  const response = await authFetch(`/v1/Task/AddRemark`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
@@ -75,26 +63,24 @@ export const createRemark = async (payload) => {
 };
 
 export const getRemarksByTask = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/GetRemarksByTask`, {
+  const response = await authFetch(`/v1/Task/GetRemarksByTask`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   return await response.json();
 };
 
+// Replaced axios with authFetch for consistency and JWT support
 export const getTasksByUser = async (userId) => {
-  const response = await axios.get(`${API_URL}/v1/Task/GetTasksByUser/${userId}`);
-  return response.data;
+  const response = await authFetch(`/v1/Task/GetTasksByUser/${userId}`);
+  if (!response.ok) throw new Error("Failed to fetch tasks by user");
+  return await response.json();
 };
 
-
-
 export const updateTask = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/updateTask`, {
+  const response = await authFetch(`/v1/Task/updateTask`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const data = await response.json();
@@ -102,11 +88,9 @@ export const updateTask = async (payload) => {
   return data;
 };
 
-
 export const updateTaskStatus = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/updateTaskStatus`, {
-    method: "POST",  
-    headers: { "Content-Type": "application/json" },
+  const response = await authFetch(`/v1/Task/updateTaskStatus`, {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   const data = await response.json();
@@ -114,33 +98,29 @@ export const updateTaskStatus = async (payload) => {
   return data;
 };
 
-
 export const submitTaskCompletion = async (payload) => {
-    const response = await fetch(
-        `${API_URL}/v1/Task/submitTaskCompletion`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        }
-    );
-    const data = await response.json();
-    if (!response.ok)
-        throw new Error(data.message || "Failed to submit task completion");
-    return data; 
+  const response = await authFetch(`/v1/Task/submitTaskCompletion`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok)
+    throw new Error(data.message || "Failed to submit task completion");
+  return data;
 };
 
 export const getTaskCompletionApprovals = async (userId, status) => {
-  const response = await fetch(`${API_URL}/v1/Task/getTaskCompletionApprovals/${userId}/${status}`);
+  const response = await authFetch(
+    `/v1/Task/getTaskCompletionApprovals/${userId}/${status}`
+  );
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || "Failed to fetch approvals");
   return data;
 };
 
 export const updateTaskCompletionApproval = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/updateTaskCompletionApproval`, {
+  const response = await authFetch(`/v1/Task/updateTaskCompletionApproval`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const data = await response.json();
@@ -148,50 +128,44 @@ export const updateTaskCompletionApproval = async (payload) => {
   return data;
 };
 
-
 export const submitTaskAssignment = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/submitTaskAssignment`, {
+  const response = await authFetch(`/v1/Task/submitTaskAssignment`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to submit task assignment");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to submit task assignment");
   return data;
 };
 
 export const getTaskAssignmentApprovals = async (userId, status) => {
-  const response = await fetch(
-    `${API_URL}/v1/Task/getTaskAssignmentApprovals/${userId}/${status}`
+  const response = await authFetch(
+    `/v1/Task/getTaskAssignmentApprovals/${userId}/${status}`
   );
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to fetch assignment approvals");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to fetch assignment approvals");
   return data;
 };
 
 export const updateTaskAssignmentApproval = async (payload) => {
-  const response = await fetch(`${API_URL}/v1/Task/updateTaskAssignmentApproval`, {
+  const response = await authFetch(`/v1/Task/updateTaskAssignmentApproval`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Failed to update assignment approval");
+  if (!response.ok)
+    throw new Error(data.message || "Failed to update assignment approval");
   return data;
 };
 
-
-// Auto close milestone
 export const autoCloseMilestone = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/Task/auto-close-milestone`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/Task/auto-close-milestone`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to close milestone");
@@ -202,17 +176,12 @@ export const autoCloseMilestone = async (payload) => {
   }
 };
 
-// Auto close project
 export const autoCloseProject = async (payload) => {
   try {
-    const response = await fetch(
-      `${API_URL}/v1/Task/auto-close-project`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await authFetch(`/v1/Task/auto-close-project`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
     const data = await response.json();
     if (!response.ok)
       throw new Error(data.message || "Failed to close project");

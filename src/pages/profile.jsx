@@ -89,9 +89,9 @@ export default function Profile() {
 
     return (
         <div className="app-container">
-            <Topbar />
+            {/* <Topbar /> */}
             <div className="main-layout d-flex">
-                <Navbar />
+                {/* <Navbar /> */}
                 <main className="flex-grow-1" style={{
                     background: "#f0f2f5", minHeight: "90vh"
                 }}>
@@ -345,11 +345,11 @@ export default function Profile() {
                                                             }}>
                                                                 {a.roleName}
                                                             </div>
-                                                            <div style={{
-                                                                fontSize: "11px", color: "#6b7280"
-                                                            }}>
-                                                                Code: {a.approverCode}
-                                                            </div>
+                                                             {!isInternal && a.approverCode && (
+        <div style={{ fontSize: "11px", color: "#6b7280" }}>
+            Code: {a.approverCode}
+        </div>
+    )}
                                                         </div>
 
                                                         {/* Approver */}

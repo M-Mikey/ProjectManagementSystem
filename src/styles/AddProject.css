@@ -8,22 +8,7 @@ body {
   background: #dce6f5;
 }
 
-/* Layout */
-.main-layout {
-  display: flex;
-  height: calc(100vh - 55px);
-  overflow: hidden;
-}
 
-/* Content */
-.content {
-  background: #dce6f5;
-  flex: 1;
-  padding: 16px 32px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
 
 .content h2 {
   margin: 0 0 12px 0;

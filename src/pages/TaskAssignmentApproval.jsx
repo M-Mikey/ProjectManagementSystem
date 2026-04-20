@@ -41,9 +41,9 @@ const TaskAssignmentApproval = () => {
 
   return (
     <div className="app-container">
-      <Topbar />
+      {/* <Topbar /> */}
       <div className="main-layout d-flex">
-        <Navbar />
+        {/* <Navbar /> */}
         <div className="flex-grow-1">
           <div className="container-fluid p-4">
 

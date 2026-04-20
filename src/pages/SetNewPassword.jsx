@@ -86,42 +86,49 @@ export default function SetNewPassword() {
     return true;
   };
 
-  const submit = async (e) => {
+ const submit = async (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
     if (!userName) {
-      toast.error("Session expired. Please try again.");
-      navigate("/");
-      return;
+        toast.error("Session expired. Please try again.");
+        navigate("/");
+        return;
     }
 
     try {
-      const response = await setNewPasswordApi({
-        userName: userName,
-        newPassword: password,
-      });
+        const response = await setNewPasswordApi({
+            userName: userName,
+            newPassword: password,
+        });
 
-      if (response.success) {
-        toast.success(response.message || "Password updated successfully");
-        navigate("/");
-      } else {
-        toast.error(response.message || "Something went wrong");
-      }
+        if (response.success) {
+            toast.success(response.message || "Password updated successfully");
+            navigate("/");
+        } else {
+            // Highlight password field for reuse error specifically
+            if (response.message?.toLowerCase().includes("last 5")) {
+                toast.error(response.message);
+                setErrors({ ...errors, password: true });
+                passwordRef.current.focus();
+            } else {
+                toast.error(response.message || "Something went wrong");
+            }
+        }
     } catch (error) {
-      toast.error("Server error. Please try again.");
+        toast.error("Server error. Please try again.");
     }
-  };
+};
 
   return (
     <div className="login-container">
       <div className="row">
-        <div className="col-lg-6 col-md-6 col-12">
+        <div className="col-lg-5 col-md-5 col-12">
           <Common />
         </div>
 
-        <div className="col-lg-6 col-md-6 col-12">
+        <div className="col-lg-5 col-md-5 col-12">
           <div className="right">
             <div className="login-box">
               <h2>

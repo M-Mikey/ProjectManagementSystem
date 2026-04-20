@@ -3,7 +3,8 @@ import "../styles/ProjectDetails.css";
 import Topbar from "../components/Navbar/Topbar";
 import Navbar from "../components/Navbar/Navbar";
 import UserSearch from '../components/Common/UserSearch';
-import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate, } from "react-router-dom";
+import TaskDocumentPanel from "../components/Common/TaskDocumentPanel"
 import { getProjectById } from "../api/projectService";
 import {
   createTask,
@@ -45,7 +46,7 @@ const EMPTY_TASK_FORM = {
   taskName: "",
   taskDescription: "",
   priority: "",
-  approvalLevel: "",
+  approvalLevel:   "2",
   taskAssignedTo: "",
   taskDueDate: "",
 };
@@ -87,7 +88,7 @@ const getStatusClass = (status) => {
   const s = status.toLowerCase();
   if (s.includes("pending"))                           return "pd-badge pd-badge-pending";
   if (s.includes("active") || s.includes("progress")) return "pd-badge pd-badge-active";
-  if (s.includes("complet"))                           return "pd-badge pd-badge-completed";
+  if (s.includes("complete"))                           return "pd-badge pd-badge-completed";
   if (s.includes("cancel"))                            return "pd-badge pd-badge-cancelled";
   if (s.includes("acknowledged"))                      return "pd-badge pd-badge-active";
   if (s.includes("approved"))                          return "pd-badge pd-badge-completed";
@@ -119,7 +120,8 @@ const ProjectDetails = () => {
   const location      = useLocation();
   const navigate      = useNavigate();
   const { projectId } = useParams();
-
+const [approvalChain, setApprovalChain] = useState([]);
+const [chainLoading, setChainLoading]   = useState(false);
   const [projectData, setProjectData]             = useState(null);
   const [expandedRow, setExpandedRow]             = useState(null);
   const [taskData, setTaskData]                   = useState({});
@@ -142,6 +144,16 @@ const ProjectDetails = () => {
   const [subSaving, setSubSaving]                 = useState(false);
   const [editSaving, setEditSaving]               = useState(false);
   const [expandedTasks, setExpandedTasks]         = useState({});
+  const [selectedMilestoneForTimeline, setSelectedMilestoneForTimeline] = useState(null);
+  const [historyFilterMilestoneId, setHistoryFilterMilestoneId] = useState(null);
+  const [showAddMilestoneModal, setShowAddMilestoneModal] = useState(false);
+const [addMilestoneForm, setAddMilestoneForm]           = useState({
+  milestoneName: "", description: "", dueDate: "",
+  priority: "", assignedTo: ""
+});
+const [addMilestoneUser, setAddMilestoneUser]   = useState(null);
+const [addMilestoneErrors, setAddMilestoneErrors] = useState({});
+const [addMilestoneSaving, setAddMilestoneSaving] = useState(false);
 
 
 // Add:
@@ -198,9 +210,25 @@ useEffect(() => {
       
       if (projectId) {
         const result  = await getProjectById(projectId);
+       
         const project = Array.isArray(result) ? result[0] : result;
+        console.log("Project",project);
         setProjectData(project || null);
+
       }
+      
+if (projectId) {
+    setChainLoading(true);
+    try {
+        const { getProjectApprovalChain } = await import("../api/projectService");
+        const chain = await getProjectApprovalChain(projectId);
+        setApprovalChain(chain || []);
+    } catch (err) {
+        console.error("Failed to load approval chain:", err);
+    } finally {
+        setChainLoading(false);
+    }
+}
     } catch (err) {
       console.error(err);
       setError("Failed to load project details");
@@ -211,7 +239,7 @@ useEffect(() => {
   loadProject();
 }, [projectId, userId]);
 
-// Auto expand milestones where current user has tasks assigned
+
 useEffect(() => {
   if (!projectData || !userId) return;
 
@@ -253,21 +281,20 @@ useEffect(() => {
 
   console.log("projectData:", projectData);
 
-  // ✅ Check PL — format: "Name (userId)"
   const plMatch  = projectData?.projectPl?.match(/\(([^)]+)\)/);
   const plId     = plMatch ? plMatch[1] : projectData?.projectPl;
   setIsPL(String(plId) === String(userId));
 
-  // ✅ Check Creator — format: "Name (userId)"
+ 
   const creatorMatch = projectData?.createdBy?.match(/\(([^)]+)\)/);
   const creatorId    = creatorMatch
     ? creatorMatch[1]
     : projectData?.createdBy;
   setIsCreator(String(creatorId) === String(userId));
 
-  console.log("plId:", plId, "creatorId:", creatorId, "userId:", userId);
-  console.log("isPL:", String(plId) === String(userId));
-  console.log("isCreator:", String(creatorId) === String(userId));
+  
+
+
 
 }, [projectData, userId]);
 
@@ -476,32 +503,39 @@ const handleApproveRequest = async (requestId, status) => {
     task?.ackStatusText === "Go back" ||
     task?.taskStatus    === "Rejected";
 
-  const isTaskLocked = (task) => isTaskUnderApproval(task);
+ const isTaskLocked = (task) => {
+    if (!task) return true;
+    if ((task.taskStatus || "").toLowerCase() === "completed") return true;
+    if (Number(task.taskStatus) === 4) return true;
+    return isTaskUnderApproval(task);
+};
+  
 
-  const isSubTaskBlocked = (task) => {
+ const isSubTaskBlocked = (task) => {
   if (!task) return true;
-  // Block if under approval/rejected
+
+
   if (isTaskUnderApproval(task)) return true;
-  // ✅ Block if task not yet acknowledged by assigned user
+
+  
   if (Number(task.ackStatus) === 0) return true;
+
+  
+  if ((task.taskStatus || "").toLowerCase() === "completed") return true;
+
   return false;
 };
 
-  // ✅ 3. NEW — only milestone assigned user can add tasks
+
   const canAddTask = (milestone) => {
     if (!milestone) return false;
     const match      = milestone.assignedTo?.match(/\(([^)]+)\)/);
     const assignedId = match ? match[1] : milestone.assignedTo;
-     console.log("canAddTask check:", {
-    assignedTo: milestone.assignedTo,
-    assignedId,
-    userId,
-    result: String(assignedId) === String(userId)
-  });
+  
     return String(assignedId) === String(userId);
   };
 
-  // ✅ 4. FIXED — removed PL/Admin override
+  
   const canAddSubTask = (task) => {
     if (!task) return false;
     const match      = task.taskAssignedTo?.match(/\(([^)]+)\)$/);
@@ -516,34 +550,42 @@ const handleApproveRequest = async (requestId, status) => {
     return String(task.createdBy) === String(userId);
   };
 
-  // ✅ 6. FIXED — removed PL/Admin override
+  
   const canEditSeverity = (task) => {
     if (!task) return false;
     return String(task.createdBy) === String(userId);
   };
 
-  // ✅ 7. NEW — only PL or Creator can edit milestone
-  const canEditMilestone = () => {
+
+const canEditMilestone = (milestone) => {
     if (!projectData) return false;
-    const plMatch    = projectData?.projectPl?.match(/\(([^)]+)\)/);
-    const plId       = plMatch ? plMatch[1] : projectData?.projectPl;
+   
+    if (milestone && (milestone.status || "").toLowerCase() === "completed") return false;
+    const plMatch      = projectData?.projectPl?.match(/\(([^)]+)\)/);
+    const plId         = plMatch ? plMatch[1] : projectData?.projectPl;
     const creatorMatch = projectData?.createdBy?.match(/\(([^)]+)\)/);
-    const creatorId  = creatorMatch ? creatorMatch[1] : projectData?.createdBy;
+    const creatorId    = creatorMatch ? creatorMatch[1] : projectData?.createdBy;
     return (
-      String(userId) === String(plId) ||
-      String(userId) === String(creatorId)
+        String(userId) === String(plId) ||
+        String(userId) === String(creatorId)
     );
-  };
+};
 
   // ✅ 8. FIXED — added acknowledged status
 const isMilestoneApproved = (milestone) => {
   if (!milestone) return false;
+  // UAT #9: completed milestones cannot receive new tasks
+  if ((milestone.status || "").toLowerCase() === "completed") return false;
   const approvalStatus = (milestone.status || "").toLowerCase();
-  const isApproved = approvalStatus === "approved" ||
-                     approvalStatus === "active";
-  // ✅ Also check ACK status
+  const isApproved = approvalStatus === "approved" || approvalStatus === "active";
   const isAcked = Number(milestone.ackStatus) === 1;
   return isApproved && isAcked;
+};
+
+const projectApprovalStatus=(projectData)=>{
+  if(!projectData) return false;
+  const ProjectapprovalStatus = (projectData.projectApprovalStatus || "").toLowerCase();
+  return ProjectapprovalStatus === "approved" || ProjectapprovalStatus === "active";
 };
 
   /* ================= USER SELECT ================= */
@@ -567,12 +609,12 @@ const isMilestoneApproved = (milestone) => {
 
   /* ================= MODAL OPEN/CLOSE ================= */
   const openTaskModal = (milestone) => {
-    setSelectedMilestone(milestone);
-    setTaskForm(EMPTY_TASK_FORM);
-    setSelectedUser(null);
-    setTaskErrors({});
-    setShowModal(true);
-  };
+  setSelectedMilestone(milestone);
+  setTaskForm({ ...EMPTY_TASK_FORM, approvalLevel: "2" }); // ← add this
+  setSelectedUser(null);
+  setTaskErrors({});
+  setShowModal(true);
+};
 
   const closeModal = () => {
     setShowModal(false);
@@ -586,7 +628,7 @@ const isMilestoneApproved = (milestone) => {
     setShowSubModal(false);
     setSelectedSubUser(null);
     setSubTaskErrors({});
-    setSubTaskForm(EMPTY_TASK_FORM);
+    setSubTaskForm({ ...EMPTY_TASK_FORM, approvalLevel: "2" }); // ← pre-populate approval level
   };
 
   const openEditModal = (task, milestone) => {
@@ -597,15 +639,14 @@ const isMilestoneApproved = (milestone) => {
     const assignedId = match ? match[1] : task.taskAssignedTo;
     const assignedName = task.taskAssignedTo?.replace(/\s*\([^)]+\)$/, "").trim();
 
-    setEditTaskForm({
-      taskName:        task.taskName        || "",
-      taskDescription: task.taskDescription || "",
-      priority:        task.taskSeverity    || "",
-      approvalLevel:   task.taskApprovalLevel
-                         ? String(task.taskApprovalLevel) : "",
-      taskAssignedTo:  assignedId           || "",
-      taskDueDate:     task.taskDueDate     || "",
-    });
+   setEditTaskForm({
+  taskName:        task.taskName        || "",
+  taskDescription: task.taskDescription || "",
+  priority:        task.taskSeverity    || "",
+  approvalLevel:   "2",                        // ← always Division Head
+  taskAssignedTo:  assignedId           || "",
+  taskDueDate:     task.taskDueDate     || "",
+});
 
     setSelectedEditUser({
       name:     assignedName || task.taskAssignedTo,
@@ -626,6 +667,8 @@ const isMilestoneApproved = (milestone) => {
 
   const openMilestoneEditModal = (milestone) => {
     setSelectedMilestoneEdit(milestone);
+    // Add this temporarily in handleRowClick after refreshTasks
+
 
     const priorityMap = { "Critical": "1", "High": "2", "Medium": "3", "Low": "4" };
     const normalizedPriority =
@@ -694,6 +737,7 @@ const isMilestoneApproved = (milestone) => {
     return Object.keys(e).length === 0;
   };
 
+  
   const saveMilestoneEdit = async () => {
     if (!validateMilestoneEdit()) return;
     if (milestoneEditSaving) return;
@@ -714,29 +758,50 @@ const isMilestoneApproved = (milestone) => {
       const result = await updateMilestoneApi(payload);
 
       if (result?.success) {
-        const updated = await import("../api/projectService")
-          .then(m => m.getProjectById(projectData.projectId));
-        if (updated)
-          setProjectData(Array.isArray(updated) ? updated[0] : updated);
+    const updated = await import("../api/projectService")
+        .then(m => m.getProjectById(projectData.projectId));
+    if (updated)
+        setProjectData(Array.isArray(updated) ? updated[0] : updated);
 
-        setSuccessMsg(
-          result?.reApproval
-            ? "Milestone updated. Due date changed — sent for re-approval."
-            : "Milestone updated successfully."
-        );
-        closeMilestoneEditModal();
-        setTimeout(() => setSuccessMsg(""), 3000);
-      } else {
-        setError(result?.message || "Failed to update milestone");
-      }
+    const code = result?.resultCode;
+const msg =
+    code === 5 ? "Milestone updated. Assignee changed and date exceeds project timeline — full re-approval triggered." :
+    code === 4 ? "Milestone updated. Due date exceeds project timeline — full re-approval triggered." :
+    code === 3 ? "Milestone updated. Assignee changed — sent for re-acknowledgement." :
+    code === 2 ? "Milestone updated. Due date changed — revision logged." :
+                 "Milestone updated successfully.";
+
+    setSuccessMsg(msg);
+    closeMilestoneEditModal();
+    setTimeout(() => setSuccessMsg(""), 3000);
+} else {
+    const msg = result?.message || "";
+    if (msg.includes("REASSIGN_BLOCKED")) {
+      setError("Cannot reassign this milestone — it has already been acknowledged by the current assignee. To reassign, the assignee must first put it on hold.");
+    } else if (msg.includes("LOCKED")) {
+      setError("This milestone is completed and cannot be edited.");
+    } else if (msg.includes("DATE_SEQUENCE")) {
+      setError("Due date cannot be earlier than a preceding milestone's due date.");
+    } else if (msg.includes("DATE_EXCEEDED")) {
+      setError("Due date cannot exceed the project target date.");
+    } else if (msg.includes("NOT_FOUND")) {
+      setError("Milestone not found. Please refresh and try again.");
+    } else {
+      setError(msg || "Failed to update milestone");
+    }
+  }
     } catch (err) {
       console.error(err);
-      setError("Error updating milestone");
+      // ADDED: handle HTTP 403 for locked milestone
+      if (err?.response?.status === 403) {
+        setError("This milestone is approved or completed. Only the Project Leader can edit it.");
+      } else {
+        setError(err?.message || "Error updating milestone");
+      }
     } finally {
       setMilestoneEditSaving(false);
     }
   };
-
   /* ================= CHANGE HANDLERS ================= */
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -999,20 +1064,33 @@ const isMilestoneApproved = (milestone) => {
 
       const result = await updateTaskApi(payload);
 
-      if (result?.success) {
-        await refreshTasks(selectedMilestone.milestoneId);
-        setSuccessMsg(
-          result?.reApproval
-            ? "Task updated. Due date changed — task has been sent for re-approval."
-            : "Task updated successfully."
-        );
-        setTimeout(() => {
-          setSuccessMsg("");
-          closeEditModal();
-        }, 2000);
-      } else {
-        setError(result?.message || "Failed to update task");
-      }
+if (result?.success) {
+    await refreshTasks(selectedMilestone.milestoneId);
+
+    const code = result?.resultCode;
+    const msg =
+        code === 4 ? "Task updated. Date and assignee changed — re-approval and re-acknowledgement triggered." :
+        code === 3 ? "Task updated. Assignee changed — sent for re-acknowledgement." :
+        code === 2 ? "Task updated. Due date changed — sent for re-approval." :
+                     "Task updated successfully.";
+
+    setSuccessMsg(msg);
+    setTimeout(() => {
+        setSuccessMsg("");
+        closeEditModal();
+    }, 2000);
+} else {
+    const msg = result?.message || "";
+    if (msg.includes("TASK_LOCKED")) {
+        setError("Cannot edit a completed task.");
+    } else if (msg.includes("TASK_UNDER_APPROVAL")) {
+        setError("Task is under completion approval — no edits allowed.");
+    } else if (msg.includes("TASK_NOT_FOUND")) {
+        setError("Task not found. Please refresh and try again.");
+    } else {
+        setError(msg || "Failed to update task.");
+    }
+}
     } catch (err) {
       console.error(err);
       setError("Error updating task");
@@ -1027,6 +1105,7 @@ const isMilestoneApproved = (milestone) => {
       const tasks = await getTasksByMilestone(
         projectData.projectId, milestoneId
       );
+      console.log(`Refreshed tasks for milestone ${milestoneId}:`, tasks);
       setTaskData((prev) => ({ ...prev, [milestoneId]: tasks || [] }));
     } catch (err) {
       console.error(err);
@@ -1062,7 +1141,8 @@ const isMilestoneApproved = (milestone) => {
           const underApproval = isTaskUnderApproval(task);
           const subBlocked    = isSubTaskBlocked(task);
           const allowSubTask  = canAddSubTask(task);  // ✅ Fixed
-          const allowEdit     = canEditTask(task);    // ✅ Fixed
+          const allowEdit     = canEditTask(task);
+            
 
           return (
             <React.Fragment key={task.taskDtlId}>
@@ -1124,16 +1204,18 @@ const isMilestoneApproved = (milestone) => {
 {level < MAX_LEVEL && (
   <button
     className="pd-btn pd-btn-outline"
-    disabled={!allowSubTask}
+     disabled={!allowSubTask || subBlocked}
     title={
-      !allowSubTask
-        ? "Only the assigned associate can add subtasks"
-        : Number(task.ackStatus) === 0
-        ? "Acknowledge this task first before adding subtasks"
-        : isSubTaskBlocked(task)
-        ? "Parent task is under revision"
-        : "Add Sub Task"
-    }
+  !allowSubTask
+    ? "Only the assigned associate can add subtasks"
+    : Number(task.ackStatus) === 0
+    ? "Acknowledge this task first before adding subtasks"
+    : (task.taskStatus || "").toLowerCase() === "completed"
+    ? "Cannot add subtasks to a completed task"
+    : isSubTaskBlocked(task)
+    ? "Parent task is under revision"
+    : "Add Sub Task"
+}
     onClick={(e) => {
       e.stopPropagation();
 
@@ -1256,6 +1338,86 @@ const isMilestoneApproved = (milestone) => {
     return avatarColors[i];
   };
 
+  const saveAddMilestone = async () => {
+  const e = {};
+  if (!addMilestoneForm.milestoneName.trim()) e.milestoneName = "Name is required";
+  if (!addMilestoneForm.description.trim())   e.description   = "Description is required";
+  if (!addMilestoneForm.dueDate)              e.dueDate       = "Due date is required";
+  else if (addMilestoneForm.dueDate < todayStr())
+    e.dueDate = "Due date cannot be in the past";
+  else if (projectData?.projectTimeline &&
+           addMilestoneForm.dueDate > toYMD(projectData.projectTimeline))
+    e.dueDate = "Due date cannot exceed project timeline";
+  if (!addMilestoneForm.priority)   e.priority   = "Priority is required";
+  if (!addMilestoneForm.assignedTo) e.assignedTo = "Assigned To is required";
+
+  setAddMilestoneErrors(e);
+  if (Object.keys(e).length > 0) return;
+
+  setAddMilestoneSaving(true);
+  try {
+    const { saveMilestone } = await import("../api/projectService");
+    const result = await saveMilestone({
+      projectId:     projectData.projectId,
+      milestoneName: addMilestoneForm.milestoneName.trim(),
+      description:   addMilestoneForm.description.trim(),
+      dueDate:       addMilestoneForm.dueDate,
+      priority:      addMilestoneForm.priority,
+      assignedTo:    addMilestoneForm.assignedTo,
+      approvalLvl:   projectData.projectApprovalLvl,
+      assignedBy:    userId,
+    });
+
+    if (result?.success) {
+      const updated = await getProjectById(projectData.projectId);
+      setProjectData(Array.isArray(updated) ? updated[0] : updated);
+      setShowAddMilestoneModal(false);
+      setAddMilestoneForm({ milestoneName: "", description: "", dueDate: "", priority: "", assignedTo: "" });
+      setAddMilestoneUser(null);
+      setAddMilestoneErrors({});
+      setSuccessMsg(
+        result?.result === 2
+          ? "Milestone added and auto-acknowledged."
+          : "Milestone added. Sent for approval."
+      );
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } else {
+      const msg = result?.message || "";
+     if (msg.includes("-2")) {
+    if (isCreator) {
+        setError(
+            "Milestone due date exceeds the project target date. " +
+            "Please extend the project timeline first."
+        );
+        setShowAddMilestoneModal(false);
+        setTlMode("project");
+        setTlProjectDate("");
+        setTlReason("");
+        setTlErrors({});
+        setTimelineMessage({
+            text: "Extend the project timeline to accommodate your new milestone, then add the milestone again.",
+            type: "warning"
+        });
+        setShowTimelineModal(true);
+        loadTimelineRequests();
+    } else {
+        setError(
+            "Milestone due date exceeds the project target date. " +
+            "Please ask the Project Creator to extend the project timeline first."
+        );
+    }
+} else if (msg.includes("-4")) {
+    setError("Due date must be after all existing milestones.");
+} else {
+    setError(msg || "Failed to add milestone");
+}
+    }
+  } catch (err) {
+    setError(err?.message || "Error saving milestone");
+  } finally {
+    setAddMilestoneSaving(false);
+  }
+};
   if (loading) return (
     <div className="pd-page-loading">
       <div className="pd-spinner"></div>
@@ -1266,17 +1428,186 @@ const isMilestoneApproved = (milestone) => {
   /* ================= RENDER ================= */
   return (
     <div className="pd-wrapper">
-      <Topbar />
+      {/* <Topbar /> */}
       <div className="main-layout d-flex">
-        <Navbar />
-        <div className="pd-content">
+        {/* <Navbar /> */}
+        <div className="pd-content" style={{width:"100%"}}>
 
           <div className="pd-page-header">
-            <h1 className="pd-page-title">
-              {projectData?.projectName || "Project Details"}
-            </h1>
-          </div>
+  <h1 className="pd-page-title">
+    {projectData?.projectName || "Project Details"}
+  </h1>
+</div>
 
+{projectData && (
+  <div style={{
+    background: "#fff",
+    border: "1px solid #dce6f4",
+    borderRadius: 10,
+    padding: "16px 24px",
+    marginBottom: 20,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "12px 24px",
+    fontSize: 13,
+  }}>
+    {[
+      { label: "Project Description", value: projectData.projectDescrip },
+      { label: "Project Leader",      value: projectData.projectPl },
+      { label: "Project Creator",     value: projectData.createdBy },
+      { label: "Target Date",         value: projectData.projectTimeline },
+      { label: "Severity",            value: { "1":"Critical","2":"High","3":"Medium","4":"Low" }[projectData.projectSeverity] || projectData.projectSeverity },
+      { label: "Approval Level",      value: { "1":"Level 1 - Dept Head","2":"Level 2 - Division Head","3":"Level 3 - Operating Head","4":"Level 4 - Director","5":"Level 5 - Sr. Director" }[String(projectData.projectApprovalLvl)] || projectData.projectApprovalLvl },
+      { label: "Project Status",      value: projectData.projectStatus },
+      { label: "Approval Status",     value: projectData.projectApprovalStatus },
+    ].map(({ label, value }) => (
+      <div key={label}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7fa3", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+          {label}
+        </div>
+        <div style={{ fontWeight: 500, color: "#0f2044" }}>
+          {value || "—"}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+{/* ── Approval Chain Panel — visible to Creator and PL only ── */}
+{(isCreator || isPL) && projectData?.projectApprovalStatus !== "Approved" && (
+    <div style={{
+        background:   "#fff",
+        border:       "1px solid #dce6f4",
+        borderRadius: 10,
+        padding:      "16px 20px",
+        marginBottom: 20,
+    }}>
+        <div style={{
+            fontWeight:   700,
+            fontSize:     13,
+            color:        "#0f2044",
+            marginBottom: 12,
+            display:      "flex",
+            alignItems:   "center",
+            gap:          8,
+        }}>
+            <i className="bi bi-diagram-3 text-primary" />
+            Approval Chain Status
+            {approvalChain.filter(a => a.status === 0).length > 0 && (
+                <span style={{
+                    background:   "#fee2e2",
+                    color:        "#991b1b",
+                    fontSize:     10,
+                    fontWeight:   700,
+                    padding:      "2px 8px",
+                    borderRadius: 20,
+                }}>
+                    {approvalChain.filter(a => a.status === 0).length} Pending
+                </span>
+            )}
+        </div>
+
+        {chainLoading ? (
+            <div style={{ fontSize: 13, color: "#6c757d" }}>
+                <div className="spinner-border spinner-border-sm text-primary me-2" />
+                Loading approval chain...
+            </div>
+        ) : approvalChain.length === 0 ? (
+            <div style={{ fontSize: 13, color: "#6c757d" }}>
+                No approval chain data found.
+            </div>
+        ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {approvalChain.map((item, idx) => (
+                    <div key={idx} style={{
+                        display:      "flex",
+                        alignItems:   "center",
+                        gap:          12,
+                        padding:      "10px 14px",
+                        borderRadius: 8,
+                        background:
+                            item.status === 1 ? "#f0fdf4" :
+                            item.status === 2 ? "#fff5f5" : "#fefce8",
+                        border:
+                            item.status === 1 ? "1px solid #bbf7d0" :
+                            item.status === 2 ? "1px solid #fecaca" : "1px solid #fde68a",
+                    }}>
+                        {/* Level badge */}
+                        <div style={{
+                            width:          32,
+                            height:         32,
+                            borderRadius:   "50%",
+                            background:
+                                item.status === 1 ? "#16a34a" :
+                                item.status === 2 ? "#dc2626" : "#d97706",
+                            color:          "#fff",
+                            display:        "flex",
+                            alignItems:     "center",
+                            justifyContent: "center",
+                            fontSize:       12,
+                            fontWeight:     700,
+                            flexShrink:     0,
+                        }}>
+                            {item.levelNo}
+                        </div>
+
+                        {/* Role + name */}
+                        <div style={{ flex: 1 }}>
+                            <div style={{
+                                fontSize:   12,
+                                fontWeight: 600,
+                                color:      "#374151",
+                            }}>
+                                {item.roleName}
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6b7280" }}>
+                                {item.approverName}
+                                {item.approvedBy && item.approverName !== item.approvedBy
+                                    ? ` (${item.approvedBy})` : ""}
+                            </div>
+                        </div>
+
+                        {/* Status */}
+                        <div style={{ textAlign: "right" }}>
+                            <span style={{
+                                fontSize:     11,
+                                fontWeight:   700,
+                                padding:      "3px 10px",
+                                borderRadius: 20,
+                                background:
+                                    item.status === 1 ? "#dcfce7" :
+                                    item.status === 2 ? "#fee2e2" : "#fef9c3",
+                                color:
+                                    item.status === 1 ? "#166534" :
+                                    item.status === 2 ? "#991b1b" : "#854d0e",
+                            }}>
+                                {item.status === 1 ? "✓ Approved" :
+                                 item.status === 2 ? "✗ Sent Back" : "⏳ Pending"}
+                            </span>
+                            {item.approvalDate && item.status !== 0 && (
+                                <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
+                                    {item.approvalDate}
+                                </div>
+                            )}
+                            {item.remarks && (
+                                <div style={{
+                                    fontSize:  11,
+                                    color:     "#6b7280",
+                                    fontStyle: "italic",
+                                    marginTop: 3,
+                                    maxWidth:  200,
+                                    textAlign: "right",
+                                }}>
+                                    "{item.remarks}"
+                                </div>
+                            )}
+                        </div>
+                            
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+)}
           {error && (
             <div className="pd-alert-error">
               <i className="bi bi-exclamation-circle-fill"></i>
@@ -1344,10 +1675,23 @@ const isMilestoneApproved = (milestone) => {
           )}
 
           {/* Milestone Table */}
-          {activeTab === "milestones" && (
-          <div className="pd-card">
-            <div style={{ overflowX: "auto" }}>
-              <table className="pd-table">
+        {activeTab === "milestones" && (
+  <div className="pd-card">
+
+   
+    {(isCreator || isPL) && projectApprovalStatus(projectData) && (
+      <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14 ,width:"fit-content" }}>
+        <button
+          className="pd-btn pd-btn-primary"
+          onClick={() => setShowAddMilestoneModal(true)}
+        >
+          <i className="bi bi-plus-lg" /> Add Milestone
+        </button>
+      </div>
+    )}
+
+    <div style={{ overflowX: "auto" }}>
+      <table className="pd-table">
                 <thead>
                   <tr>
                     <th style={{ width: 56 }}>#</th>
@@ -1356,7 +1700,9 @@ const isMilestoneApproved = (milestone) => {
                     <th>Assigned Date</th>
                     <th>Due Date</th>
                     <th>Status</th>
-                    <th style={{ width: 110 }}>Actions</th>
+                   
+                    <th>Edit</th>
+                     <th style={{ width: 110 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1413,6 +1759,34 @@ const isMilestoneApproved = (milestone) => {
                             <span className="pd-date">{val.dueDate || "—"}</span>
                           </td>
                           <td><StatusBadge value={val.status} /></td>
+                          <td>
+<div className="pd-btn-actions">
+{/* ✅ Edit Milestone — only PL or Creator */}
+  {canEditMilestone(val) && (
+  <button
+    className="pd-btn pd-btn-icon"
+    title={
+      (val.status || "").toLowerCase() === "completed"
+        ? "Cannot edit a completed milestone"
+        : (val.status || "").toLowerCase() === "approved" && !isPL
+        ? "Approved milestone — only Project Leader can edit"
+        : "Edit Milestone"
+    }
+    disabled={
+      (val.status || "").toLowerCase() === "completed" ||
+      ((val.status || "").toLowerCase() === "approved" && !isPL)
+    }
+    onClick={(e) => {
+      e.stopPropagation();
+      if ((val.status || "").toLowerCase() === "completed") return; // double guard
+      openMilestoneEditModal(val);
+    }}
+  >
+    <i className="bi bi-pencil"></i>
+  </button>
+)}
+</div>
+                          </td>
                           <td onClick={(e) => e.stopPropagation()}>
                             {/* Actions div */}
 <div className="pd-btn-actions">
@@ -1433,35 +1807,42 @@ const isMilestoneApproved = (milestone) => {
     <i className="bi bi-plus-lg"></i> Add Task
   </button>
 
-  {/* ✅ Edit Milestone — only PL or Creator */}
-  {canEditMilestone() && (
-    <button
-      className="pd-btn pd-btn-icon"
-      title="Edit Milestone"
-      onClick={(e) => {
-        e.stopPropagation();
-        openMilestoneEditModal(val);
-      }}
-    >
-      <i className="bi bi-pencil"></i>
-    </button>
-  )}
+  
 
-  {/* ✅ Timeline Change — only PL or Creator — OUTSIDE canEditMilestone */}
+  {}
   {(isCreator || isPL) && (
-    <button
-      className="pd-btn pd-btn-outline"
-      title="Request Timeline Change"
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowTimelineModal(true);
-        loadTimelineRequests();
-      }}
-    >
-      <i className="bi bi-calendar-range"></i>
-      Timeline
-    </button>
-  )}
+  <button
+    className="pd-btn pd-btn-outline"
+    title={
+        (val.status || "").toLowerCase() === "completed"
+            ? "Cannot change timeline of a completed milestone"
+            : !projectApprovalStatus(projectData)
+            ? "Project must be approved first"
+            : "Request Timeline Change"
+    }
+    disabled={
+        !projectApprovalStatus(projectData) ||
+        (val.status || "").toLowerCase() === "completed"
+    }
+    onClick={(e) => {
+      e.stopPropagation();
+      if (!projectApprovalStatus(projectData)) return;
+      // Pre-select this milestone and switch to milestone mode
+      setTlMode("milestone");
+      setTlMilestoneId(String(val.milestoneId));
+      setTlMilestoneDate("");
+      setTlReason("");
+      setTlErrors({});
+      setTimelineMessage({ text: "", type: "" });
+      setSelectedMilestoneForTimeline(val);
+      setShowTimelineModal(true);
+      loadTimelineRequests();
+    }}
+  >
+    <i className="bi bi-calendar-range"></i>
+    Timeline
+  </button>
+)}
   {/* ✅ Timeline History Button */}
 {(isCreator || isPL) && (
   <button
@@ -1469,6 +1850,7 @@ const isMilestoneApproved = (milestone) => {
     title="View Timeline History"
     onClick={(e) => {
       e.stopPropagation();
+      setHistoryFilterMilestoneId(val.milestoneId);
       setShowHistoryPanel(true);
       loadTimelineHistory();
     }}
@@ -1477,16 +1859,43 @@ const isMilestoneApproved = (milestone) => {
     History
   </button>
 )}
-
 </div>
-                          </td>
+</td>
+
                         </tr>
 
                         {/* Tasks Expanded Row */}
                         {expandedRow === val.milestoneId && (
                           <tr className="pd-tasks-panel">
-                            <td colSpan="7">
+                            <td colSpan="8">
                               <div className="pd-tasks-inner">
+                                {/* Milestone detail strip */}
+<div style={{
+  display: "flex", gap: 24, flexWrap: "wrap",
+  background: "#f4f7fc", borderRadius: 8,
+  padding: "10px 16px", marginBottom: 12,
+  fontSize: 12, borderLeft: "3px solid #1a3c5e"
+}}>
+  {[
+    { label: "Description",    value: val.description },
+    { label: "Assigned To",    value: val.assignedTo },
+    { label: "Assigned By",    value: val.assignedBy },
+    { label: "Assigned Date",  value: val.assignedDate },
+    { label: "Due Date",       value: val.dueDate },
+    { label: "Priority",       value: { "1":"Critical","2":"High","3":"Medium","4":"Low" }[val.priority] || val.priority },
+    { label: "Approval Level", value: { "1":"Level 1","2":"Level 2","3":"Level 3","4":"Level 4","5":"Level 5" }[val.approvalLevel] || val.approvalLevel },
+    { label: "ACK Status",     value: Number(val.ackStatus) === 1 ? "Acknowledged" : Number(val.ackStatus) === 2 ? "On Hold" : "Pending" },
+  ].map(({ label, value }) => (
+    <div key={label} style={{ minWidth: 120 }}>
+      <div style={{ fontWeight: 700, color: "#6b7fa3", textTransform: "uppercase", fontSize: 10, letterSpacing: 0.4, marginBottom: 2 }}>
+        {label}
+      </div>
+      <div style={{ color: "#0f2044", fontWeight: 500 }}>
+        {value || "—"}
+      </div>
+    </div>
+  ))}
+</div>
                                 {rowLoading === val.milestoneId ? (
                                   <div className="pd-loading">
                                     <div className="pd-spinner"></div>
@@ -1514,6 +1923,7 @@ const isMilestoneApproved = (milestone) => {
                                           <th>Ack Status</th>
                                           <th>Sub Task</th>
                                           <th>Remarks</th>
+                                          
                                           <th>Edit</th>
                                         </tr>
                                       </thead>
@@ -1636,18 +2046,16 @@ const isMilestoneApproved = (milestone) => {
                   </div>
 
                   <FormField label="Approval Level" error={taskErrors.approvalLevel}>
-                    <select
-                      name="approvalLevel"
-                      value={taskForm.approvalLevel}
-                      onChange={handleChange}
-                      className={`pd-select ${taskErrors.approvalLevel ? "error" : ""}`}
-                    >
-                      <option value="">Select approval level</option>
-                      {APPROVAL_LEVEL_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FormField>
+                  <select
+                    name="approvalLevel"
+                    value="2"
+                    onChange={() => {}}
+                    disabled
+                    className="pd-select"
+                  >
+                    <option value="2">Level 2 - Division Head</option>
+                  </select>
+                </FormField>
 
                   <div className="pd-field">
                     <label className="pd-label">
@@ -1774,18 +2182,16 @@ const isMilestoneApproved = (milestone) => {
                   </div>
 
                   <FormField label="Approval Level" error={subTaskErrors.approvalLevel}>
-                    <select
-                      name="approvalLevel"
-                      className={`pd-select ${subTaskErrors.approvalLevel ? "error" : ""}`}
-                      onChange={handleSubTaskChange}
-                      value={subTaskForm.approvalLevel}
-                    >
-                      <option value="">Select approval level</option>
-                      {APPROVAL_LEVEL_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </FormField>
+  <select
+    name="approvalLevel"
+    className="pd-select"
+    value="2"
+    onChange={() => {}}
+    disabled
+  >
+    <option value="2">Level 2 - Division Head</option>
+  </select>
+</FormField>
 
                   <div className="pd-field">
                     <label className="pd-label">
@@ -1830,9 +2236,18 @@ const isMilestoneApproved = (milestone) => {
           )}
 
           {/* ===== EDIT TASK MODAL ===== */}
-          {showEditModal && (
+         {showEditModal && (
             <div className="pd-modal-backdrop" onClick={closeEditModal}>
-              <div className="pd-modal" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="pd-modal"
+                style={{
+                  maxWidth:  "700px",
+                  width:     "95vw",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="pd-modal-header">
                   <div className="pd-modal-title">
                     <div className="pd-modal-icon">
@@ -1870,6 +2285,9 @@ const isMilestoneApproved = (milestone) => {
                 )}
 
                 <div className="pd-modal-body">
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+
+                  <div style={{ gridColumn: "1 / -1" }}>
                   <FormField label="Task Name" error={editTaskErrors.taskName}>
                     <input
                       type="text"
@@ -1880,7 +2298,9 @@ const isMilestoneApproved = (milestone) => {
                       onChange={handleEditChange}
                     />
                   </FormField>
+                  </div>
 
+                  <div style={{ gridColumn: "1 / -1" }}>
                   <FormField label="Description" error={editTaskErrors.taskDescription}>
                     <textarea
                       name="taskDescription"
@@ -1890,50 +2310,49 @@ const isMilestoneApproved = (milestone) => {
                       onChange={handleEditChange}
                     />
                   </FormField>
-
-                  <div className="pd-field-row">
-                    <FormField label="Target Date" error={editTaskErrors.taskDueDate}>
-                      <input
-                        type="date"
-                        name="taskDueDate"
-                        className={`pd-input ${editTaskErrors.taskDueDate ? "error" : ""}`}
-                        value={editTaskForm.taskDueDate}
-                        min={todayStr()}
-                        max={
-                          selectedMilestone?.dueDate
-                            ? toYMD(selectedMilestone.dueDate)
-                            : undefined
-                        }
-                        onChange={handleEditChange}
-                      />
-                    </FormField>
-
-                    <FormField label="Severity Level" error={editTaskErrors.priority}>
-                      <select
-                        name="priority"
-                        value={editTaskForm.priority}
-                        onChange={handleEditChange}
-                        className={`pd-select ${editTaskErrors.priority ? "error" : ""}`}
-                      >
-                        <option value="">Select severity</option>
-                        {SEVERITY_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </FormField>
                   </div>
 
+                  {/* Target Date + Severity — side by side */}
+                  <FormField label="Target Date" error={editTaskErrors.taskDueDate}>
+                    <input
+                      type="date"
+                      name="taskDueDate"
+                      className={`pd-input ${editTaskErrors.taskDueDate ? "error" : ""}`}
+                      value={editTaskForm.taskDueDate}
+                      min={todayStr()}
+                      max={
+                        selectedMilestone?.dueDate
+                          ? toYMD(selectedMilestone.dueDate)
+                          : undefined
+                      }
+                      onChange={handleEditChange}
+                    />
+                  </FormField>
+
+                  <FormField label="Severity Level" error={editTaskErrors.priority}>
+                    <select
+                      name="priority"
+                      value={editTaskForm.priority}
+                      onChange={handleEditChange}
+                      className={`pd-select ${editTaskErrors.priority ? "error" : ""}`}
+                    >
+                      <option value="">Select severity</option>
+                      {SEVERITY_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </FormField>
+
+                  {/* Approval Level + Assigned To — side by side */}
                   <FormField label="Approval Level" error={editTaskErrors.approvalLevel}>
                     <select
                       name="approvalLevel"
-                      value={editTaskForm.approvalLevel}
-                      onChange={handleEditChange}
-                      className={`pd-select ${editTaskErrors.approvalLevel ? "error" : ""}`}
+                      value="2"
+                      onChange={() => {}}
+                      disabled
+                      className="pd-select"
                     >
-                      <option value="">Select approval level</option>
-                      {APPROVAL_LEVEL_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
+                      <option value="2">Level 2 - Division Head</option>
                     </select>
                   </FormField>
 
@@ -1951,6 +2370,31 @@ const isMilestoneApproved = (milestone) => {
                       </div>
                     )}
                   </div>
+
+                  </div>{/* end grid */}
+
+                  {/* Divider */}
+                  <div style={{
+                    borderTop:  "1px solid #e9ecef",
+                    margin:     "20px 0 0 0",
+                  }} />
+
+                  {/* Document Upload Panel */}
+                  {selectedTask && (
+                    <TaskDocumentPanel
+                      task={selectedTask}
+                      projectId={projectData.projectId}
+                      milestoneId={selectedTask.milestoneId}
+                      userId={userId}
+                      isLocked={
+                        (selectedTask.taskStatus || "").toLowerCase() === "completed" ||
+                        Number(selectedTask.taskApprovalStatus) === 1            ||
+                        Number(selectedTask.taskApprovalStatus) === 2
+                      }
+                      isCreator={String(selectedTask.createdBy) === String(userId)}
+                    />
+                  )}
+
                 </div>
 
                 <div className="pd-modal-footer">
@@ -2080,6 +2524,11 @@ const isMilestoneApproved = (milestone) => {
                         ⚠ {milestoneEditErrors.assignedTo}
                       </div>
                     )}
+                     {/* UAT #6: hint about reassignment restriction */}
+                  <small style={{ color: "#6c757d", fontSize: 11, marginTop: 4, display: "block" }}>
+                    <i className="bi bi-info-circle me-1"></i>
+                    Reassignment is only allowed if the current assignee has not yet acknowledged the milestone.
+                  </small>
                   </div>
                 </div>
 
@@ -2493,7 +2942,11 @@ const isMilestoneApproved = (milestone) => {
           Timeline History
         </div>
         <div style={{ fontSize: 12, opacity: 0.75, marginTop: 3 }}>
-          {projectData?.projectName}
+          {historyFilterMilestoneId
+            ? projectData?.milestones?.find(
+                m => m.milestoneId === historyFilterMilestoneId
+              )?.milestoneName || projectData?.projectName
+            : projectData?.projectName}
         </div>
       </div>
     </div>
@@ -2579,7 +3032,17 @@ const isMilestoneApproved = (milestone) => {
           zIndex:     0,
         }} />
 
-        {historyData.map((item, index) => (
+        {historyData
+  .filter(item =>
+    historyFilterMilestoneId === null ||
+    item.changeType === "PROJECT" ||
+    item.milestoneId === historyFilterMilestoneId ||
+    // fallback: match by name if milestoneId not in history model
+    projectData?.milestones?.find(
+      m => m.milestoneId === historyFilterMilestoneId
+    )?.milestoneName === item.milestoneName
+  )
+  .map((item, index) => (
           <div key={index} style={{
             display:      "flex",
             gap:          16,
@@ -2716,7 +3179,7 @@ const isMilestoneApproved = (milestone) => {
   </div>
 
   {/* Footer */}
-  <div style={{
+ <div style={{
     padding:    "14px 16px",
     borderTop:  "1px solid #e9ecef",
     flexShrink: 0,
@@ -2745,6 +3208,26 @@ const isMilestoneApproved = (milestone) => {
       <i className="bi bi-arrow-clockwise" />
       Refresh
     </button>
+
+    <button
+      onClick={() => setHistoryFilterMilestoneId(
+        historyFilterMilestoneId !== null ? null : historyFilterMilestoneId
+      )}
+      style={{
+        flex:         1,
+        background:   historyFilterMilestoneId !== null ? "#e8edf5" : "transparent",
+        border:       "1.5px solid #c8d6e5",
+        borderRadius: 7,
+        padding:      "9px",
+        fontSize:     13,
+        fontWeight:   600,
+        color:        "#1a3c5e",
+        cursor:       "pointer",
+      }}
+    >
+      {historyFilterMilestoneId !== null ? "Show All" : "All"}
+    </button>
+
     <button
       onClick={() => setShowHistoryPanel(false)}
       style={{
@@ -2764,6 +3247,134 @@ const isMilestoneApproved = (milestone) => {
   </div>
 
 </div>
+
+{/* ===== ADD MILESTONE MODAL ===== */}
+{showAddMilestoneModal && (
+  <div className="pd-modal-backdrop"
+    onClick={() => setShowAddMilestoneModal(false)}>
+    <div className="pd-modal"
+      onClick={e => e.stopPropagation()}>
+
+      <div className="pd-modal-header">
+        <div className="pd-modal-title">
+          <div className="pd-modal-icon">
+            <i className="bi bi-flag-fill" />
+          </div>
+          Add New Milestone
+        </div>
+        <button className="pd-modal-close"
+          onClick={() => setShowAddMilestoneModal(false)}>×</button>
+      </div>
+
+      <div style={{ padding: "12px 24px 0" }}>
+        <div className="pd-modal-context"
+          style={{ background: "#fff8e1", borderColor: "#f9a825" }}>
+          <i className="bi bi-exclamation-triangle-fill"
+            style={{ color: "#f9a825" }} />
+          <span style={{ fontSize: 12, color: "#7a5c00" }}>
+            Since the project is already approved, this milestone will be
+            sent for re-approval automatically.
+          </span>
+        </div>
+      </div>
+
+      <div className="pd-modal-body">
+        <FormField label="Milestone Name"
+          error={addMilestoneErrors.milestoneName}>
+          <input type="text" className={`pd-input ${addMilestoneErrors.milestoneName ? "error" : ""}`}
+            value={addMilestoneForm.milestoneName}
+            onChange={e => {
+              setAddMilestoneForm(p => ({ ...p, milestoneName: e.target.value }));
+              setAddMilestoneErrors(p => ({ ...p, milestoneName: "" }));
+            }}
+            placeholder="Enter milestone name"
+          />
+        </FormField>
+
+        <FormField label="Description"
+          error={addMilestoneErrors.description}>
+          <textarea className={`pd-textarea ${addMilestoneErrors.description ? "error" : ""}`}
+            value={addMilestoneForm.description}
+            onChange={e => {
+              setAddMilestoneForm(p => ({ ...p, description: e.target.value }));
+              setAddMilestoneErrors(p => ({ ...p, description: "" }));
+            }}
+            placeholder="Enter description"
+          />
+        </FormField>
+
+        <div className="pd-field-row">
+          <FormField label="Due Date" error={addMilestoneErrors.dueDate}>
+            <input type="date"
+              className={`pd-input ${addMilestoneErrors.dueDate ? "error" : ""}`}
+              value={addMilestoneForm.dueDate}
+              min={todayStr()}
+              max={projectData?.projectTimeline
+                ? toYMD(projectData.projectTimeline) : undefined}
+              onChange={e => {
+                setAddMilestoneForm(p => ({ ...p, dueDate: e.target.value }));
+                setAddMilestoneErrors(p => ({ ...p, dueDate: "" }));
+              }}
+            />
+          </FormField>
+
+          <FormField label="Priority" error={addMilestoneErrors.priority}>
+            <select className={`pd-select ${addMilestoneErrors.priority ? "error" : ""}`}
+              value={addMilestoneForm.priority}
+              onChange={e => {
+                setAddMilestoneForm(p => ({ ...p, priority: e.target.value }));
+                setAddMilestoneErrors(p => ({ ...p, priority: "" }));
+              }}>
+              <option value="">Select Priority</option>
+              <option value="1">Critical</option>
+              <option value="2">High</option>
+              <option value="3">Medium</option>
+              <option value="4">Low</option>
+            </select>
+          </FormField>
+        </div>
+
+        <div className="pd-field">
+          <label className="pd-label">
+            Assigned To <span className="req">*</span>
+          </label>
+          <UserSearch
+            onUserSelect={user => {
+              setAddMilestoneUser(user);
+              setAddMilestoneForm(p => ({ ...p, assignedTo: user.userName }));
+              setAddMilestoneErrors(p => ({ ...p, assignedTo: "" }));
+            }}
+            selectedUser={addMilestoneUser}
+          />
+          {addMilestoneErrors.assignedTo && (
+            <div className="pd-field-error">
+              ⚠ {addMilestoneErrors.assignedTo}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="pd-modal-footer">
+        <button className="pd-btn pd-btn-secondary"
+          onClick={() => setShowAddMilestoneModal(false)}
+          disabled={addMilestoneSaving}>
+          Cancel
+        </button>
+        <button className="pd-btn pd-btn-success"
+          onClick={saveAddMilestone}
+          disabled={addMilestoneSaving}>
+          {addMilestoneSaving ? (
+            <>
+              <div className="pd-spinner"
+                style={{ width: 14, height: 14, borderWidth: 2  }} />
+              Saving…
+            </>
+          ) : "Add Milestone"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
         </div>
       </div>

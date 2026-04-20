@@ -112,9 +112,9 @@ const NotificationsPage = () => {
 
   return (
     <>
-      <Topbar />
+    
       <div className="d-flex">
-        <UserNavbar />
+     
         <div className="main flex-grow-1">
           <div className="container-fluid p-4">
 

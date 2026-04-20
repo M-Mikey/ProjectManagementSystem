@@ -103,10 +103,10 @@ const ProjectApprovalPending = () => {
 
   return (
     <>
-      <Topbar />
+      {/* <Topbar /> */}
 
       <div className="d-flex">
-        <Navbar />
+        {/* <Navbar /> */}
 
         <div
           className="main mt-2"

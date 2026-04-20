@@ -428,9 +428,9 @@ export default function MilestonePage() {
 
     return (
         <div className="app-container">
-            <Topbar />
+            {/* <Topbar /> */}
             <div className="main-layout">
-                <Navbar />
+                {/* <Navbar /> */}
 
                 {/* ─── Confirm Modal ─── */}
                 <ConfirmModal

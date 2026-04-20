@@ -151,3 +151,47 @@
 .sidebar-profile-circle:hover {
   background: #d5dcec;
 }
+
+
+/* ── Sidebar transition shell ── */
+.sidebar {
+  flex-shrink: 0;
+  overflow:    hidden;
+  transition:  width 0.25s ease, opacity 0.2s ease;
+  will-change: width, opacity;
+}
+
+/* Desktop: open */
+.sidebar--open:not(.sidebar--mobile) {
+  opacity:        1;
+  pointer-events: auto;
+}
+
+/* Desktop: closed — collapses width so content fills the gap */
+.sidebar--closed:not(.sidebar--mobile) {
+  width:          0 !important;
+  opacity:        0;
+  pointer-events: none;
+}
+
+/* Mobile: fixed drawer */
+.sidebar--mobile {
+  position:   fixed;
+  top:        0;
+  left:       0;
+  height:     100%;
+  z-index:    1045;
+  width:      190px !important; /* match your existing sidebar width */
+  transform:  translateX(-100%);
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar--mobile.sidebar--open {
+  transform:      translateX(0);
+  pointer-events: auto;
+}
+
+.sidebar--mobile.sidebar--closed {
+  pointer-events: none;
+}

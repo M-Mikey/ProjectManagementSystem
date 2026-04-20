@@ -34,20 +34,22 @@ import Reports from "./pages/Report";
 import NotificationsPage from './components/Navbar/NotificationsPage';  
 
 import TaskCompletionApprovalDetails from "./pages/TaskCompletionApprovalDetails";
+import Layout from "./components/Common/Layout";
 
 
 export default function App() {
   return (
     <BrowserRouter>
+
       <Routes>
 
         {/* ── Public Routes ── */}
-        <Route path="/"                element={<Login />} />
+        <Route path="/" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/otp-verify"      element={<OtpVerify />} />
-        <Route path="/set-password"    element={<SetNewPassword />} />
+        <Route path="/otp-verify" element={<OtpVerify />} />
+        <Route path="/set-password" element={<SetNewPassword />} />
 
-        {/* ── Admin Only Routes ── */}
+        {/* ── Admin Routes (no layout or optional layout) ── */}
         <Route path="/dashboard-admin" element={
           <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
         } />
@@ -58,69 +60,28 @@ export default function App() {
           <ProtectedRoute adminOnly><EditUser /></ProtectedRoute>
         } />
 
-        {/* ── Protected Routes ── */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute><Dashboard /></ProtectedRoute>
-        } />
-        <Route path="/addProject" element={
-          <ProtectedRoute><AddProject /></ProtectedRoute>
-        } />
-        <Route path="/milestone" element={
-          <ProtectedRoute><MilestonePage /></ProtectedRoute>
-        } />
-        <Route path="/projectFinalPage" element={
-          <ProtectedRoute><ProjectFinalPage /></ProtectedRoute>
-        } />
-        <Route path="/project_dashboard" element={
-          <ProtectedRoute><ProjectDashboard /></ProtectedRoute>
-        } />
-        <Route path="/project-details/:projectId" element={
-          <ProtectedRoute><ProjectDetails /></ProtectedRoute>
-        } />
-        <Route path="/task_details/:projectId/:milestoneId" element={
-          <ProtectedRoute><TaskDetails /></ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute><Profile /></ProtectedRoute>
-        } />
+        {/* ── Protected + Layout Routes ── */}
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
 
-        {/* ── Approval Routes ── */}
-        <Route path="/project_approval" element={
-          <ProtectedRoute><ProjectApproval /></ProtectedRoute>
-        } />
-        <Route path="/project_approval_details/:projectId/:milestoneId" element={
-          <ProtectedRoute><ProjectApprovalPending /></ProtectedRoute>
-        } />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/addProject" element={<AddProject />} />
+          <Route path="/milestone" element={<MilestonePage />} />
+          <Route path="/projectFinalPage" element={<ProjectFinalPage />} />
+          <Route path="/project_dashboard" element={<ProjectDashboard />} />
+          <Route path="/project-details/:projectId" element={<ProjectDetails />} />
+          <Route path="/task_details/:projectId/:milestoneId" element={<TaskDetails />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/project_approval" element={<ProjectApproval />} />
+          <Route path="/project_approval_details/:projectId/:milestoneId" element={<ProjectApprovalPending />} />
+          <Route path="/task_completion_approval_details/:taskDtlId" element={<TaskCompletionApprovalDetails />} />
+          <Route path="/user_acknowledge_milestone/:projectId/:milestoneId" element={<UserAck />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/user_acknowledge/:projectId" element={<UserAck />} />
+          <Route path="/user_acknowledge_task/:projectId/:milestoneId/:parentTaskId/:taskDtlId" element={<UserAcknowledgeTask />} />
+          <Route path="/user_dashboard" element={<UserDashboard />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
 
-        {/* ── Task Completion Verification ── */}
-        <Route path="/task_completion_approval_details/:taskDtlId" element={
-          <ProtectedRoute><TaskCompletionApprovalDetails /></ProtectedRoute>
-        } />
-        
-
-       
-        <Route path="/reports" element={
-          <ProtectedRoute><Reports /></ProtectedRoute>
-        } />
-
-    
-        <Route path="/user_acknowledge/:projectId" element={
-          <ProtectedRoute><UserAck /></ProtectedRoute>
-        } />
-
-      
-        <Route path="/user_acknowledge_task/:projectId/:milestoneId/:parentTaskId/:taskDtlId" element={
-          <ProtectedRoute><UserAcknowledgeTask /></ProtectedRoute>
-        } />
-
-      
-        <Route path="/user_dashboard" element={
-          <ProtectedRoute><UserDashboard /></ProtectedRoute>
-        } />
-
-        <Route path="/notifications" element={
-          <ProtectedRoute><NotificationsPage /></ProtectedRoute>
-        } />
+        </Route>
 
       </Routes>
 
@@ -132,6 +93,7 @@ export default function App() {
         closeButton={false}
         theme="colored"
       />
+
     </BrowserRouter>
   );
 }

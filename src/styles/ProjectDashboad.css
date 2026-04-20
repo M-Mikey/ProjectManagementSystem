@@ -1,28 +1,28 @@
 /* ── APP SHELL ── */
-.app-container {
+/* .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
   font-family: Georgia, "Times New Roman", serif;
-}
+} */
 
 /* ── MAIN LAYOUT (sidebar + content) ── */
-.main-layout {
+/* .main-layout {
   display: flex;
   flex: 1;
   overflow: hidden;
-}
+} */
 
 /* ── SCROLLABLE CONTENT AREA ── */
-.content {
+/* .content {
   flex: 1;
   padding: 20px 24px;
   overflow-y: auto;
   background: #f0f2f7;
    
 }
-
+ */
 
 /* ── PROJECTS PANEL (rounded card wrapping everything) ── */
 .projects-panel {

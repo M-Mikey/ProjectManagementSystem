@@ -6,7 +6,7 @@ export default function UserSearch({ onUserSelect, selectedUser }) {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState([]);
 
-  // 🔑 Restore value when coming back
+  // Restore value when coming back
   useEffect(() => {
     if (selectedUser) {
       setQuery(`${selectedUser.name} - ${selectedUser.userName}`);
@@ -24,18 +24,34 @@ export default function UserSearch({ onUserSelect, selectedUser }) {
     }
 
     try {
+      const token = localStorage.getItem("pmToken");
+
       const response = await fetch(
-        `${API_URL}/v1/users/search?q=${value}`
+        `${API_URL}/v1/users/search?q=${encodeURIComponent(value)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
+
+      if (!response.ok) {
+        console.error("User search failed:", response.status);
+        setUsers([]);
+        return;
+      }
+
       const data = await response.json();
       setUsers(data);
     } catch (error) {
       console.error("Error searching users:", error);
+      setUsers([]);
     }
   };
 
   const handleSelect = (user) => {
-    setQuery(`${user.name} - ${user.userName}`); // ✅ correct format
+    setQuery(`${user.name} - ${user.userName}`);
     setUsers([]);
 
     if (onUserSelect) {
@@ -62,8 +78,6 @@ export default function UserSearch({ onUserSelect, selectedUser }) {
               className="list-group-item list-group-item-action"
               onClick={() => handleSelect(u)}
             >
-              {/** 
-              <small>{u.name} - {u.userName}</small>*/}
               <small>
                 {u.name} [<strong>{u.userName}</strong>]
               </small>

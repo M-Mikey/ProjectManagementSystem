@@ -58,10 +58,10 @@ const hod = [
 const UserAck = () => {
   return (
     <>
-      <Topbar />
+      {/* <Topbar /> */}
 
       <div className="d-flex">
-        <LeftNavbar />
+        {/* <LeftNavbar /> */}
 
         <div
           className="main mt-2"

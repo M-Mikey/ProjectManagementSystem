@@ -76,14 +76,14 @@
   min-height: 100vh;
   color: var(--pd-text-primary);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;  /* ADD THIS */
 }
 
 .pd-content {
   padding: 28px 32px;
-  flex: 1;
-  min-width: 0;
+  /* flex: 1;
+  min-width: 0; */
 }
-
 /* ── Page Header ── */
 .pd-page-header { margin-bottom: 24px; }
 
@@ -807,3 +807,19 @@
 .pd-modal::-webkit-scrollbar       { width: 5px; }
 .pd-modal::-webkit-scrollbar-track { background: transparent; }
 .pd-modal::-webkit-scrollbar-thumb { background: var(--pd-border); border-radius: 4px; }
+
+
+
+/* ── Collab Space text fix ── */
+.collab-comment-text {
+  display: block !important;
+  font-size: 14px;
+  color: #212529;
+  line-height: 1.6;
+  word-break: break-word;
+  margin-top: 6px;
+}
+
+.collab-comment-text span {
+  display: inline !important;
+}

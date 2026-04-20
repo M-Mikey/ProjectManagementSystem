@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import Topbar from "../components/Navbar/Topbar";
 import Navbar from "../components/Navbar/Navbar";
+import TaskDocumentPanel from "../components/Common/TaskDocumentPanel";
 import {
     getTasksByMilestone,
     getRemarksByTask,
@@ -61,7 +62,6 @@ const TaskDetails = () => {
     // ─────────────────────────────────────────
     // Computed flags
     // ─────────────────────────────────────────
-
     const isDelayed = liveTask?.taskDueDate
         ? new Date() > new Date(liveTask.taskDueDate)
         : false;
@@ -70,12 +70,11 @@ const TaskDetails = () => {
         liveTask?.taskStatus === "Completed" ||
         liveTask?.taskStatus === "4";
 
-   
-const isUnderApproval =
-    liveTask?.taskApprovalStatus === 1  ||
-    liveTask?.taskApprovalStatus === "1";
+    const isUnderApproval =
+        liveTask?.taskApprovalStatus === 1  ||
+        liveTask?.taskApprovalStatus === "1";
 
-    // ✅ Locked = completed OR under approval
+    // Locked = completed OR under approval
     const isLocked = isTaskCompleted || isUnderApproval;
 
     const isAcked = Number(liveTask?.ackStatus) === 1;
@@ -97,7 +96,21 @@ const isUnderApproval =
         return isAssignedUser() && isAcked && !isLocked;
     };
 
-    // ✅ Can add remark only if not locked
+    // Can upload docs: assigned user only, not locked, must be acked
+    const canUploadDocs = () =>
+        isAssignedUser() && isAcked && !isLocked;
+
+    // Can view docs: assigned user OR task creator
+    const canViewDocs = () =>
+        isAssignedUser() || isTaskCreator();
+
+    // Can delete a specific doc: only the uploader
+    // SP also enforces this — UI is an extra guard
+    const canDeleteThisDoc = (doc) => {
+        if (isLocked) return false;
+        return String(doc.uploadedBy) === String(userId);
+    };
+
     const canAddRemark = () =>
         (isAssignedUser() || isTaskCreator()) && !isLocked;
 
@@ -127,9 +140,30 @@ const isUnderApproval =
         }
     }, [selectedTask]);
 
+    useEffect(() => { loadRemarks(); }, [loadRemarks]);
+
+    /* ================= FETCH FRESH TASK ================= */
     useEffect(() => {
-        loadRemarks();
-    }, [loadRemarks]);
+        const fetchFreshTask = async () => {
+            try {
+                const updatedTasks = await getTasksByMilestone(
+                    projectId, milestoneId
+                );
+                const updated = updatedTasks?.find(
+                    t => t.taskDtlId === selectedTask?.taskDtlId
+                );
+                if (updated) {
+                    setLiveTask(updated);
+                    console.log("Fresh task loaded:", updated);
+                }
+            } catch (err) {
+                console.error("Failed to fetch fresh task:", err);
+            }
+        };
+        if (projectId && milestoneId && selectedTask?.taskDtlId) {
+            fetchFreshTask();
+        }
+    }, []);
 
     /* ================= SUBMIT REMARK ================= */
     const handleSubmit = async () => {
@@ -151,10 +185,7 @@ const isUnderApproval =
             const result = await createRemark(payload);
             if (result?.success) {
                 setRemarks("");
-                setMessage({
-                    type: "success",
-                    text: "Remark added successfully"
-                });
+                setMessage({ type: "success", text: "Remark added successfully" });
                 await loadRemarks();
                 setTimeout(() => setMessage(null), 2000);
             } else {
@@ -185,173 +216,133 @@ const isUnderApproval =
     };
 
     /* ================= SUBMIT STATUS UPDATE ================= */
-   const handleStatusUpdate = async () => {
-    if (!validateStatus() || statusSaving) return;
-    if (isLocked) {
-        setStatusMessage({
-            type: "danger",
-            text: "Task is already completed or under approval."
-        });
-        return;
-    }
-
-    setStatusSaving(true);
-    setStatusMessage(null);
-
-    try {
-        const payload = {
-            taskDtlId:      liveTask.taskDtlId,
-            taskStatus:     parseInt(newStatus),
-            remarks:        statusRemarks,
-            riskMitigation: riskMitigation || null,
-            modifiedBy:     userId,
-        };
-
-        const result = await updateTaskStatus(payload);
-
-        if (result?.success) {
-            if (result.isCompleted) {
-                try {
-                    const completionResult = await submitTaskCompletion({
-                        taskDtlId:   liveTask.taskDtlId,
-                        submittedBy: userId,
-                    });
-
-                    // ✅ Handle auto-approval case (P_RESULT = 2)
-                    if (completionResult?.result === 2 ||
-                        completionResult?.autoApproved === true) {
-                        setStatusMessage({
-                            type: "success",
-                            text: "✅ Task completed and auto-approved. You are the task creator."
-                        });
-                    } else {
-                        setStatusMessage({
-                            type: "success",
-                            text: isDelayed
-                                ? "Task completed. Sent to creator and PL for approval (delayed)."
-                                : "Task completed. Sent to task creator for approval."
-                        });
-                    }
-                } catch (err) {
-                    console.error("Completion submit failed:", err);
-                }
-            } else if (result.isDelayed) {
-                setStatusMessage({
-                    type: "warning",
-                    text: "Status updated. Task is overdue — escalation sent."
-                });
-            } else {
-                setStatusMessage({
-                    type: "success",
-                    text: result.message || "Status updated successfully."
-                });
-            }
-
-            setNewStatus("");
-            setStatusRemarks("");
-            setRiskMitigation("");
-            setStatusErrors({});
-
-            try {
-                const updatedTasks = await getTasksByMilestone(
-                    projectId, milestoneId
-                );
-                const updated = updatedTasks?.find(
-                    t => t.taskDtlId === selectedTask.taskDtlId
-                );
-                if (updated) setLiveTask(updated);
-            } catch (err) {
-                console.error("Failed to refresh task:", err);
-            }
-
-            await loadRemarks();
-
-            setTimeout(() => {
-                setStatusMessage(null);
-                if (result.isCompleted) navigate(-1);
-            }, 2500);
-
-        } else {
+    const handleStatusUpdate = async () => {
+        if (!validateStatus() || statusSaving) return;
+        if (isLocked) {
             setStatusMessage({
                 type: "danger",
-                text: result?.message || "Failed to update status"
+                text: "Task is already completed or under approval."
             });
+            return;
         }
-    } catch (err) {
-        setStatusMessage({
-            type: "danger", text: "Error updating status"
-        });
-    } finally {
-        setStatusSaving(false);
-    }
-};
 
+        setStatusSaving(true);
+        setStatusMessage(null);
 
-
-useEffect(() => {
-    const fetchFreshTask = async () => {
         try {
-            const updatedTasks = await getTasksByMilestone(
-                projectId, milestoneId
-            );
-            const updated = updatedTasks?.find(
-                t => t.taskDtlId === selectedTask?.taskDtlId
-            );
-            if (updated) {
-                setLiveTask(updated);
-                console.log("Fresh task loaded:", updated);
+            const payload = {
+                taskDtlId:      liveTask.taskDtlId,
+                taskStatus:     parseInt(newStatus),
+                remarks:        statusRemarks,
+                riskMitigation: riskMitigation || null,
+                modifiedBy:     userId,
+            };
+
+            const result = await updateTaskStatus(payload);
+
+            if (result?.success) {
+                if (result.isCompleted) {
+                    try {
+                        const completionResult = await submitTaskCompletion({
+                            taskDtlId:   liveTask.taskDtlId,
+                            submittedBy: userId,
+                        });
+                        if (completionResult?.result === 2 ||
+                            completionResult?.autoApproved === true) {
+                            setStatusMessage({
+                                type: "success",
+                                text: "✅ Task completed and auto-approved. You are the task creator."
+                            });
+                        } else {
+                            setStatusMessage({
+                                type: "success",
+                                text: isDelayed
+                                    ? "Task completed. Sent to creator and PL for approval (delayed)."
+                                    : "Task completed. Sent to task creator for approval."
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Completion submit failed:", err);
+                    }
+                } else if (result.isDelayed) {
+                    setStatusMessage({
+                        type: "warning",
+                        text: "Status updated. Task is overdue — escalation sent."
+                    });
+                } else {
+                    setStatusMessage({
+                        type: "success",
+                        text: result.message || "Status updated successfully."
+                    });
+                }
+
+                setNewStatus("");
+                setStatusRemarks("");
+                setRiskMitigation("");
+                setStatusErrors({});
+
+                try {
+                    const updatedTasks = await getTasksByMilestone(
+                        projectId, milestoneId
+                    );
+                    const updated = updatedTasks?.find(
+                        t => t.taskDtlId === selectedTask.taskDtlId
+                    );
+                    if (updated) setLiveTask(updated);
+                } catch (err) {
+                    console.error("Failed to refresh task:", err);
+                }
+
+                await loadRemarks();
+
+                setTimeout(() => {
+                    setStatusMessage(null);
+                    if (result.isCompleted) navigate(-1);
+                }, 2500);
+
+            } else {
+                setStatusMessage({
+                    type: "danger",
+                    text: result?.message || "Failed to update status"
+                });
             }
         } catch (err) {
-            console.error("Failed to fetch fresh task:", err);
+            setStatusMessage({ type: "danger", text: "Error updating status" });
+        } finally {
+            setStatusSaving(false);
         }
     };
 
-    if (projectId && milestoneId && selectedTask?.taskDtlId) {
-        fetchFreshTask();
-    }
-}, []); 
-
-
-
-
-   
     if (!selectedTask) {
-        return (
-            <div className="text-center mt-5">No Task Selected</div>
-        );
+        return <div className="text-center mt-5">No Task Selected</div>;
     }
 
     const currentStatusLabel =
-        STATUS_LABELS[liveTask?.taskStatus] ||
-        liveTask?.taskStatus || "—";
+        STATUS_LABELS[liveTask?.taskStatus] || liveTask?.taskStatus || "—";
     const currentStatusBadge =
         STATUS_BADGE[currentStatusLabel] || "bg-secondary";
 
-       
-
     return (
         <div className="app-container">
-            <Topbar />
+            {/* <Topbar /> */}
             <div className="main-layout d-flex">
-                <Navbar />
-                <div className="flex-grow-1"
-                    style={{
-                        overflowY: "auto",
-                        height: "calc(100vh - 60px)"
-                    }}>
+                {/* <Navbar /> */}
+                <div
+                    className="flex-grow-1"
+                    style={{ overflowY: "auto", height: "calc(100vh - 60px)" }}
+                >
                     <div className="content container-fluid p-4">
 
                         {/* ── HEADER ── */}
-                        <div className="sticky-top bg-white p-3 border-bottom
-                            d-flex justify-content-between align-items-center"
-                            style={{ zIndex: 100 }}>
+                        <div
+                            className="sticky-top bg-white p-3 border-bottom
+                                d-flex justify-content-between align-items-center"
+                            style={{ zIndex: 100 }}
+                        >
                             <div>
-                                <h5 className="fw-bold mb-0">
-                                    {liveTask.taskName}
-                                </h5>
+                                <h5 className="fw-bold mb-0">{liveTask.taskName}</h5>
                                 <small className="text-muted">
-                                    {project?.projectName} →{" "}
-                                    {milestone?.milestoneName}
+                                    {project?.projectName} → {milestone?.milestoneName}
                                 </small>
                             </div>
                             <div className="d-flex align-items-center gap-2">
@@ -364,9 +355,7 @@ useEffect(() => {
                                     </span>
                                 )}
                                 {isDelayed && (
-                                    <span className="badge bg-danger">
-                                        Overdue
-                                    </span>
+                                    <span className="badge bg-danger">Overdue</span>
                                 )}
                                 <button
                                     className="btn btn-outline-secondary btn-sm"
@@ -380,41 +369,31 @@ useEffect(() => {
                         <div className="container-fluid p-3">
                             <div className="row g-3">
 
-                                {/* ── LEFT SIDE ── */}
-                                <div className="col-lg-7">
+                                {/* ── LEFT COLUMN ── */}
+                                <div className="col-lg-8">
 
-                                    {/* Task Details */}
+                                    {/* Task Details Card */}
                                     <div className="card shadow-sm mb-3">
                                         <div className="card-header"
                                             style={{ background: "#f0f4ff" }}>
-                                            <span className="fw-bold">
-                                                Task Details
-                                            </span>
+                                            <span className="fw-bold">Task Details</span>
                                         </div>
                                         <div className="card-body p-3">
                                             <div className="row g-2">
                                                 {[
-                                                    { label: "Task Name",
-                                                        value: liveTask.taskName },
-                                                    { label: "Project",
-                                                        value: project?.projectName },
-                                                    { label: "Milestone",
-                                                        value: milestone?.milestoneName },
-                                                    { label: "Assigned To",
-                                                        value: liveTask.taskAssignedTo },
-                                                    { label: "Due Date",
-                                                        value: liveTask.taskDueDate },
+                                                    { label: "Task Name",   value: liveTask.taskName },
+                                                    { label: "Project",     value: project?.projectName },
+                                                    { label: "Milestone",   value: milestone?.milestoneName },
+                                                    { label: "Assigned To", value: liveTask.taskAssignedTo },
+                                                    { label: "Due Date",    value: liveTask.taskDueDate },
                                                     {
                                                         label: "Severity",
                                                         value: (
                                                             <span className={`badge ${
-                                                                liveTask.taskSeverity === "Critical"
-                                                                    ? "bg-danger" :
-                                                                liveTask.taskSeverity === "High"
-                                                                    ? "bg-warning text-dark" :
-                                                                liveTask.taskSeverity === "Medium"
-                                                                    ? "bg-info text-dark"
-                                                                    : "bg-secondary"
+                                                                liveTask.taskSeverity === "Critical" ? "bg-danger" :
+                                                                liveTask.taskSeverity === "High"     ? "bg-warning text-dark" :
+                                                                liveTask.taskSeverity === "Medium"   ? "bg-info text-dark"
+                                                                                                     : "bg-secondary"
                                                             }`}>
                                                                 {liveTask.taskSeverity || "—"}
                                                             </span>
@@ -423,8 +402,7 @@ useEffect(() => {
                                                     {
                                                         label: "Status",
                                                         value: (
-                                                            <span className={`badge
-                                                                ${currentStatusBadge}`}>
+                                                            <span className={`badge ${currentStatusBadge}`}>
                                                                 {currentStatusLabel}
                                                             </span>
                                                         )
@@ -433,17 +411,13 @@ useEffect(() => {
                                                         label: "Approval Status",
                                                         value: (
                                                             <span className={`badge ${
-                                                                isUnderApproval
-                                                                    ? "bg-info text-dark"
-                                                                    : isTaskCompleted
-                                                                        ? "bg-success"
-                                                                        : "bg-secondary"
+                                                                isUnderApproval  ? "bg-info text-dark" :
+                                                                isTaskCompleted  ? "bg-success"
+                                                                                 : "bg-secondary"
                                                             }`}>
-                                                                {isUnderApproval
-                                                                    ? "Under Approval"
-                                                                    : isTaskCompleted
-                                                                        ? "Approved"
-                                                                        : "Not Submitted"}
+                                                                {isUnderApproval ? "Under Approval" :
+                                                                 isTaskCompleted ? "Approved"
+                                                                                 : "Not Submitted"}
                                                             </span>
                                                         )
                                                     },
@@ -451,37 +425,96 @@ useEffect(() => {
                                                         label: "ACK Status",
                                                         value: (
                                                             <span className={`badge ${
-                                                                liveTask.ackStatusText
-                                                                    === "Acknowledged"
-                                                                    ? "bg-success" :
-                                                                liveTask.ackStatusText === "Hold"
-                                                                    ? "bg-warning text-dark"
-                                                                    : "bg-secondary"
+                                                                liveTask.ackStatusText === "Acknowledged" ? "bg-success" :
+                                                                liveTask.ackStatusText === "Hold"         ? "bg-warning text-dark"
+                                                                                                          : "bg-secondary"
                                                             }`}>
-                                                                {liveTask.ackStatusText
-                                                                    || "Pending"}
+                                                                {liveTask.ackStatusText || "Pending"}
                                                             </span>
                                                         )
                                                     },
-                                                    {
-                                                        label: "Description",
-                                                        value: liveTask.taskDescription || "—"
-                                                    },
+                                                    { label: "Description", value: liveTask.taskDescription || "—" },
                                                 ].map((item, i) => (
                                                     <div key={i} className="col-md-4">
-                                                        <small className="text-muted">
-                                                            {item.label}
-                                                        </small>
-                                                        <div className="fw-semibold">
-                                                            {item.value || "—"}
-                                                        </div>
+                                                        <small className="text-muted">{item.label}</small>
+                                                        <div className="fw-semibold">{item.value || "—"}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Remarks History */}
+                                    {/* ── Documents Card — visible to assigned user + creator ── */}
+                                    {canViewDocs() && (
+                                        <div className="card shadow-sm mb-3">
+                                            <div
+                                                className="card-header d-flex
+                                                    align-items-center
+                                                    justify-content-between"
+                                                style={{ background: "#f0f4ff" }}
+                                            >
+                                                <span className="fw-bold">
+                                                    <i className="bi bi-paperclip me-2" />
+                                                    Documents
+                                                </span>
+                                                {isLocked && (
+                                                    <span
+                                                        className="badge bg-warning
+                                                            text-dark"
+                                                        style={{ fontSize: 11 }}
+                                                    >
+                                                        <i className="bi bi-lock-fill me-1" />
+                                                        Locked
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="card-body">
+
+                                                {/* Info strip for creator viewing only */}
+                                                {isTaskCreator() && !isAssignedUser() && (
+                                                    <div
+                                                        className="alert alert-info
+                                                            py-2 mb-3"
+                                                        style={{ fontSize: 12 }}
+                                                    >
+                                                        <i className="bi bi-eye-fill me-1" />
+                                                        Viewing documents uploaded
+                                                        by the assigned associate.
+                                                        You can download but not
+                                                        delete others' files.
+                                                    </div>
+                                                )}
+
+                                                {/* BRD warning: docs required before completion */}
+                                                {!isLocked &&
+                                                    isAssignedUser() &&
+                                                    newStatus === "4" && (
+                                                    <div
+                                                        className="alert alert-warning
+                                                            py-2 mb-3"
+                                                        style={{ fontSize: 12 }}
+                                                    >
+                                                        <i className="bi bi-exclamation-triangle-fill me-1" />
+                                                        BRD requires all documents
+                                                        to be uploaded before
+                                                        marking as Completed.
+                                                    </div>
+                                                )}
+
+                                                <TaskDocumentPanel
+                                                    task={liveTask}
+                                                    projectId={parseInt(projectId)}
+                                                    milestoneId={parseInt(milestoneId)}
+                                                    userId={userId}
+                                                    isLocked={isLocked}
+                                                    isCreator={canUploadDocs()}
+                                                    canDeleteDoc={canDeleteThisDoc}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Remarks History Card */}
                                     <div className="card shadow-sm mb-3">
                                         <div className="card-header"
                                             style={{ background: "#f0f4ff" }}>
@@ -490,8 +523,8 @@ useEffect(() => {
                                             </span>
                                         </div>
                                         <div className="table-responsive">
-                                            <table className="table
-                                                table-bordered align-middle mb-0">
+                                            <table className="table table-bordered
+                                                align-middle mb-0">
                                                 <thead style={{
                                                     background: "#0b2d6b",
                                                     color: "#fff"
@@ -518,7 +551,7 @@ useEffect(() => {
                                                         <tr>
                                                             <td colSpan="4"
                                                                 className="text-center
-                                                                text-muted">
+                                                                    text-muted">
                                                                 No remarks yet
                                                             </td>
                                                         </tr>
@@ -537,7 +570,7 @@ useEffect(() => {
                                         </div>
                                     </div>
 
-                                    {/* Add Remark */}
+                                    {/* Add Remark Card */}
                                     {canAddRemark() && (
                                         <div className="card shadow-sm mb-3">
                                             <div className="card-header"
@@ -581,7 +614,7 @@ useEffect(() => {
 
                                 </div>
 
-                                {/* ── RIGHT SIDE — ACTION CARD ── */}
+                                {/* ── RIGHT COLUMN — STATUS UPDATE ── */}
                                 <div className="col-lg-4">
                                     <div className="card shadow-sm mb-3">
                                         <div className="card-header"
@@ -592,38 +625,26 @@ useEffect(() => {
                                         </div>
                                         <div className="card-body">
 
-                                            {/* ── Completed ── */}
                                             {isTaskCompleted && (
-                                                <div className="alert
-                                                    alert-secondary mb-0">
+                                                <div className="alert alert-secondary mb-0">
                                                     <i className="bi bi-lock-fill me-2" />
-                                                    Task is{" "}
-                                                    <strong>Completed</strong>.
+                                                    Task is <strong>Completed</strong>.
                                                     No further updates allowed.
                                                 </div>
                                             )}
 
-                                            {/* ── Under Approval ── */}
-                                            {!isTaskCompleted &&
-                                                isUnderApproval && (
-                                                <div className="alert
-                                                    alert-warning mb-0">
+                                            {!isTaskCompleted && isUnderApproval && (
+                                                <div className="alert alert-warning mb-0">
                                                     <i className="bi bi-hourglass-split me-2" />
                                                     Task is under{" "}
-                                                    <strong>
-                                                        completion approval
-                                                    </strong>.
-                                                    No updates allowed until
-                                                    reviewed by task creator.
+                                                    <strong>completion approval</strong>.
+                                                    No updates allowed until reviewed
+                                                    by task creator.
                                                 </div>
                                             )}
 
-                                            {/* ── Not yet ACK'd ── */}
-                                            {!isLocked &&
-                                                isAssignedUser() &&
-                                                !isAcked && (
-                                                <div className="alert
-                                                    alert-warning mb-0">
+                                            {!isLocked && isAssignedUser() && !isAcked && (
+                                                <div className="alert alert-warning mb-0">
                                                     <i className="bi bi-exclamation-triangle-fill me-2" />
                                                     Please{" "}
                                                     <a href="/user_dashboard"
@@ -634,23 +655,18 @@ useEffect(() => {
                                                 </div>
                                             )}
 
-                                            {/* ── Not assigned ── */}
-                                            {!isLocked &&
-                                                !isAssignedUser() && (
-                                                <div className="alert
-                                                    alert-info mb-0">
+                                            {!isLocked && !isAssignedUser() && (
+                                                <div className="alert alert-info mb-0">
                                                     <i className="bi bi-info-circle-fill me-2" />
                                                     Only the assigned associate
                                                     can update status.
                                                 </div>
                                             )}
 
-                                            {/* ── Status Update Form ── */}
                                             {!isLocked && canUpdateStatus() && (
                                                 <>
                                                     {isDelayed && (
-                                                        <div className="alert
-                                                            alert-danger
+                                                        <div className="alert alert-danger
                                                             py-2 mb-3">
                                                             <i className="bi bi-exclamation-triangle-fill me-2" />
                                                             Task is{" "}
@@ -667,14 +683,10 @@ useEffect(() => {
                                                         </div>
                                                     )}
 
-                                                    {/* Status */}
                                                     <div className="mb-3">
-                                                        <label className="form-label
-                                                            fw-semibold">
+                                                        <label className="form-label fw-semibold">
                                                             New Status{" "}
-                                                            <span className="text-danger">
-                                                                *
-                                                            </span>
+                                                            <span className="text-danger">*</span>
                                                         </label>
                                                         <select
                                                             className={`form-select ${
@@ -694,7 +706,8 @@ useEffect(() => {
                                                             {STATUS_OPTIONS.map((opt) => (
                                                                 <option
                                                                     key={opt.value}
-                                                                    value={opt.value}>
+                                                                    value={opt.value}
+                                                                >
                                                                     {opt.label}
                                                                 </option>
                                                             ))}
@@ -706,14 +719,10 @@ useEffect(() => {
                                                         )}
                                                     </div>
 
-                                                    {/* Remarks */}
                                                     <div className="mb-3">
-                                                        <label className="form-label
-                                                            fw-semibold">
+                                                        <label className="form-label fw-semibold">
                                                             Remarks{" "}
-                                                            <span className="text-danger">
-                                                                *
-                                                            </span>
+                                                            <span className="text-danger">*</span>
                                                         </label>
                                                         <textarea
                                                             className={`form-control ${
@@ -736,15 +745,12 @@ useEffect(() => {
                                                         )}
                                                     </div>
 
-                                                    {/* Risk Mitigation */}
                                                     {isDelayed && (
                                                         <div className="mb-3">
                                                             <label className="form-label
                                                                 fw-semibold text-danger">
                                                                 Risk Mitigation Plan{" "}
-                                                                <span className="text-danger">
-                                                                    *
-                                                                </span>
+                                                                <span className="text-danger">*</span>
                                                             </label>
                                                             <textarea
                                                                 className={`form-control ${
@@ -768,25 +774,20 @@ useEffect(() => {
                                                         </div>
                                                     )}
 
-                                                    {/* Completion Info */}
                                                     {newStatus === "4" && (
-                                                        <div className="alert
-                                                            alert-info py-2 mb-3">
+                                                        <div className="alert alert-info
+                                                            py-2 mb-3">
                                                             <i className="bi bi-info-circle-fill me-2" />
                                                             Marking as{" "}
                                                             <strong>Completed</strong>{" "}
                                                             will send for{" "}
-                                                            <strong>
-                                                                artifact verification
-                                                            </strong>.
+                                                            <strong>artifact verification</strong>.
                                                             {isDelayed && (
-                                                                <> PL will also
-                                                                    be notified.</>
+                                                                <> PL will also be notified.</>
                                                             )}
                                                         </div>
                                                     )}
 
-                                                    {/* Buttons */}
                                                     <div className="d-grid gap-2">
                                                         <button
                                                             className="btn btn-success"
@@ -818,7 +819,6 @@ useEffect(() => {
 
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>

@@ -1,15 +1,9 @@
-import { API_URL } from "./apiConfig";
+import { authFetch } from "../utils/authFetch";
 
 export const getAppLevel = async (userName) => {
-  const response = await fetch(
-    `${API_URL}/v1/users/GetUserDetails/${userName}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }
-  );
+  const response = await authFetch(`/v1/users/GetUserDetails/${userName}`, {
+    method: "GET",
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch user details");
